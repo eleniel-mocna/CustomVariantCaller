@@ -73,7 +73,7 @@ void Reference::createArray(ifstream& file)
 {
     file.clear();
     file.seekg(0);
-    ref = new Base[length];
+    ref = new char[length];
     char last;   
     int i = 0;
     while (file.get(last))
@@ -82,32 +82,27 @@ void Reference::createArray(ifstream& file)
         {
         case 'a':
         case 'A':
-            ref[i] = Base::A;
+            ref[i] = 'A';
             break;
         case 'g':
         case 'G':
-            ref[i] = Base::G;
+            ref[i] = 'G';
             break;
         case 't':
         case 'T':
-            ref[i] = Base::T;
+            ref[i] = 'T';
             break;
         case 'c':
         case 'C':
-            ref[i] = Base::C;
+            ref[i] = 'C';
             break;
         default:
             --i; //This wasn't a base, go back in counting.
             break;
         }
-        ++i;
-        
+        ++i;        
     }
     assert(length==i && "Input file wasn't read correctly!");
-    
-    
-
-
 }
 
 Reference::Reference(string path)
@@ -122,14 +117,19 @@ Reference::~Reference()
     delete [] ref;
 }
 
-void Reference::getSequence(int pos, size_t lengthOfSeq, Base* ret)
+unsigned int Reference::getLength()
+{
+    return length;
+}
+
+void Reference::getSequence(int pos, size_t lengthOfSeq, char* ret)
 {
     if (pos + lengthOfSeq > length)
     {
         size_t overflowAmount = lengthOfSeq - (length - pos);
         for (size_t i = lengthOfSeq - overflowAmount; i < lengthOfSeq; i++)
         {
-            ret[i] = Base::EMPTY;
+            ret[i] = '#';
         }        
         lengthOfSeq -= overflowAmount;    
     }

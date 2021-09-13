@@ -14,12 +14,12 @@ class Reference
 public:
     Reference(string);
     ~Reference();
-    void getSequence(int, size_t, Base*);
-    int getLength();
+    void getSequence(int, size_t, char*);
+    unsigned int getLength();
 
 private:
-    Base* ref;
-    int length;
+    char* ref;
+    unsigned int length;
     void setLength(ifstream&);
     void createArray(ifstream&);
     char bases[8] = {'A', 'a', 'G', 'g', 'T', 't', 'C', 'c'};

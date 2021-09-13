@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include "Reader.h"
+#include "Reference.h"
 
 
 using namespace std;
@@ -9,13 +10,17 @@ using namespace std;
 int main()
 {
     string line;
-    Reader fileReader("Text.txt");
-    for (size_t i = 0; i < 20; i++)
-    {
-        cout << i;
-        line = fileReader.getLine();
-        cout << line << '\n';
-
-    }
+    Reader reader("../../../data/correct_sam.sam");
+    Read newRead = *(reader.getPairReads());
+    
+    /*Read pair = *(newRead.pair);
+    cout << pair.toString();
+    Reference refer("../../../data/TP53_F1.fasta");
+    Base b[130] = {};
+    refer.getSequence(1,130,b);*/
+    cout << newRead.toString();
+    //Reference* refer = new Reference("../../../data/TP53_F1.fasta");
+    Reference* refer = new Reference("../../../data/reference/ucsc.hg19.fasta");
+    cout << (*refer).getLength();    
     return 0;
 }
