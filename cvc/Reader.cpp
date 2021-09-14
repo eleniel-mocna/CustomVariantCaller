@@ -59,7 +59,15 @@ Read* Reader::getNewRead()
 							stoi(splitted[8]),
 							splitted[9],
 							splitted[10]);
-		return ret;
+		if (ret->cigar=="*")
+		{
+			delete ret;
+			return getNewRead();
+		}
+		else
+		{
+			return ret;
+		}
 	}
 	return nullptr;
 	

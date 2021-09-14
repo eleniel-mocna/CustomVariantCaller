@@ -36,6 +36,7 @@ cigarState char2cigarState(char inp)
 	case 'X': case 'x':
 		return cigarState::X;
 	default:
+		cout << "ERROR '" + to_string(inp) + "' is not a valid cigarState character!\n";
 		throw invalid_argument("Received non-valid cigarState character!");
 	}
 }
@@ -82,7 +83,8 @@ void Read::configure(size_t offset)
 }
 
 Read::Read()
-{}
+{
+}
 
 Read::Read(string qname,
 	size_t flag,
@@ -129,7 +131,6 @@ size_t Read::nextCigar()
 	{
 		if (cigarIndex<cigar.length())
 		{
-			cout << cigar.length();
 			setCigarLength();
 			setCigarType();
 		}
@@ -154,7 +155,17 @@ void Read::setCigarLength()
 }
 void Read::setCigarType()
 {
-	cigarType = char2cigarState(cigar[cigarIndex]);
+	try
+	{
+		cigarType = char2cigarState(cigar[cigarIndex]);
+	}
+	catch(const exception& e)
+	{
+		std::cerr << e.what() << "from: " << cigar << '\n';
+		cigarType = cigarState::M;
+	}
+	
+	
 	++cigarIndex;
 }
 

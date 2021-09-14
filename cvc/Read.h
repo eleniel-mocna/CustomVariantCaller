@@ -26,7 +26,6 @@ private:
 	int currentOffset;
 	bool readable=false;
 	size_t cigarIndex;
-	size_t remainingThisCigar;
 	void setCigarLength();
 	void setCigarType();
 
@@ -34,6 +33,7 @@ private:
 public:
 	Read();
 	~Read();
+	size_t remainingThisCigar; //goto private
 	Read(string, size_t, string, unsigned int, size_t, string, string, unsigned int, int, string, string);
 	void setPair(Read*);
 	size_t nextCigar();
@@ -41,12 +41,12 @@ public:
 	string qname;
 	size_t flag;
 	string rname;
-	int pos;
+	unsigned int pos;
 	size_t mapq;
 	string cigar;
 	string rnext;
-	int pnext;
-	int tlen;
+	unsigned int pnext;
+	unsigned int tlen;
 	string seq;
 	string qual;
 	Read* pair;

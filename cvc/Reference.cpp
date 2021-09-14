@@ -2,6 +2,8 @@
 #include <fstream>
 #include <cassert>
 #include "Reference.h"
+#include "ReferenceVariant.h"
+#include "ReadVariant.h"
 #include "Read.h"
 #include <stdexcept>
 
@@ -42,23 +44,25 @@ string Base2String(Base* b, size_t length)
 
 void Reference::setLength(ifstream& file)
 {    
-    length=0;
+    length=1; //indexing is 1-based
     string line;
+    chromozome_starts = new unordered_map<string, unsigned int>();
     while (getline(file, line))
     {
-        if (line[0]=='@' || line[0]==';');//This line is a header or comment
+        if (line[0]=='@' || line[0]==';' || line[0] == '>')//This line is a header or comment
+        {
+            line.erase(0,1);
+            cout << line + ": " + to_string(length-1) + '\n';
+            (*chromozome_starts)[line] = length-1;
+        }
         else
         {
             for (char character : line)
-            {
-                for (char base : bases)
+            {                    
+            if (isalpha(character))
                 {
-                    if (character==base)
-                    {
-                        length+=1;
-                    }                    
-                }
-                
+                    ++length;
+                }    
             }    
         }   
     }
@@ -73,48 +77,57 @@ void Reference::createArray(ifstream& file)
 {
     file.clear();
     file.seekg(0);
-    ref = new char[length];
-    char last;   
-    int i = 0;
-    while (file.get(last))
+    ref = *(new vector<char>(length));
+    matchingReads = *(new vector<unsigned int>(length, 0));
+    filteredMatchingReads = *(new vector<unsigned int>(length, 0));
+    string line;
+    unsigned int i = 1; //indexing is 1-based
+    
+    while (getline(file, line)) // We need to read this line by line, because of comments
     {
-        switch (last)
+        if (line[0]=='@' || line[0]==';' || line[0] == '>') //This line is a header or comment
         {
-        case 'a':
-        case 'A':
-            ref[i] = 'A';
-            break;
-        case 'g':
-        case 'G':
-            ref[i] = 'G';
-            break;
-        case 't':
-        case 'T':
-            ref[i] = 'T';
-            break;
-        case 'c':
-        case 'C':
-            ref[i] = 'C';
-            break;
-        default:
-            --i; //This wasn't a base, go back in counting.
-            break;
         }
-        ++i;        
+        else
+        {
+            for (char &last : line)
+            {
+                if (isalpha(last))
+                {                      
+                    ref[i]=toupper(last);
+                    ++i;
+                    if (i%100000000==0)
+                    {        
+                        cout << "Loaded base " + to_string(i) + "/" + to_string(length) + "...\n";
+                    }
+
+                }
+            }  
+        }      
     }
     assert(length==i && "Input file wasn't read correctly!");
 }
 
+unsigned int Reference::getIndex(string file, unsigned int index)
+{
+    return (*chromozome_starts)[file] + index;
+}
+
 Reference::Reference(string path)
 { 
+    cout << "Loading reference from storage...\n";
     ifstream file(path);
+    variants = new unordered_map<unsigned long, ReferenceVariant*>;
+    cout << "Reference loaded!\nSetting length...\n";
     setLength(file);
+    cout << "Length set: " + to_string(length) + "\nCreating array...\n";
     createArray(file);
+    cout << "Array created, reference initialized!\n";
 }
 
 Reference::~Reference()
 {
-    delete [] ref;
+    delete &ref;
 }
 
 unsigned int Reference::getLength()
@@ -122,20 +135,39 @@ unsigned int Reference::getLength()
     return length;
 }
 
-void Reference::getSequence(int pos, size_t lengthOfSeq, char* ret)
+void Reference::reportVariant(unsigned long hash, bool first, bool second, bool pair, ReadVariant* variant, char refBase)
 {
-    if (pos + lengthOfSeq > length)
-    {
-        size_t overflowAmount = lengthOfSeq - (length - pos);
-        for (size_t i = lengthOfSeq - overflowAmount; i < lengthOfSeq; i++)
-        {
-            ret[i] = '#';
-        }        
-        lengthOfSeq -= overflowAmount;    
+    cout << "refort139\n";
+    ReferenceVariant* refVar;
+    cout << "refort141\n";
+    cout << variants->end()->first;
+    cout << '\n';
+    if (variants->find(hash) == variants->end())
+    {        
+        cout << "refort143\n";
+        refVar = new ReferenceVariant(variant, refBase);
+        variants->[hash] = refVar; //BUG FIX THIS!
     }
-        
-    for (size_t i = 0; i < lengthOfSeq; i++)
-    {   
-        ret[i] = ref[pos+i];
-    }    
+    else
+    {
+        cout << "refort148\n";
+        refVar = (*variants)[hash];
+    }
+    refVar->firstCount+=first;
+    refVar->secondCount+=second;
+    refVar->pairsCount+=pair;
+    
+
+}
+
+string Reference::outputVariants()
+{
+    string ret = "";
+    for (auto varIter = variants->begin(); varIter!=variants->end(); varIter++)
+    {
+        ReferenceVariant* var = varIter->second;
+        ret += var->toString();
+        ret += '\n';
+    }
+    return ret;
 }

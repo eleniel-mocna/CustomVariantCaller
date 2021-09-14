@@ -10,7 +10,7 @@ using namespace std;
 class Core
 {
 private:
-    ReadVariant* analyzeRead(Read* first);
+    
     Reference* reference;
     void reportReadVariant(Read* first, Read* second, ReadVariant* firstRV, ReadVariant* secondRV);
     void reportFirstReadVariant(Read* first, ReadVariant* firstRV);
@@ -20,5 +20,6 @@ public:
     Core(Reference*);
     ~Core();
     void analyzeReads(Read*);
+    ReadVariant* analyzeRead(Read* first); // Goto private
 };
 
