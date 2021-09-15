@@ -5,6 +5,7 @@
 #include "Reference.h"
 #include "ReadVariant.h"
 #include <string>
+#include <functional>
 using namespace std;
 
 class Core
@@ -21,5 +22,6 @@ public:
     ~Core();
     void analyzeReads(Read*);
     ReadVariant* analyzeRead(Read* first); // Goto private
+    hash<std::string> hasher;
 };
 

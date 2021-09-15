@@ -137,25 +137,23 @@ unsigned int Reference::getLength()
 
 void Reference::reportVariant(unsigned long hash, bool first, bool second, bool pair, ReadVariant* variant, char refBase)
 {
-    cout << "refort139\n";
+    // cout << variant->toString();
     ReferenceVariant* refVar;
-    cout << "refort141\n";
-    cout << variants->end()->first;
-    cout << '\n';
+    variants->end();
     if (variants->find(hash) == variants->end())
     {        
-        cout << "refort143\n";
         refVar = new ReferenceVariant(variant, refBase);
-        variants->[hash] = refVar; //BUG FIX THIS!
+        (*variants)[hash] = refVar;
     }
     else
     {
-        cout << "refort148\n";
         refVar = (*variants)[hash];
     }
     refVar->firstCount+=first;
     refVar->secondCount+=second;
     refVar->pairsCount+=pair;
+
+    delete variant;
     
 
 }

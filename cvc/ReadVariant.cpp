@@ -11,8 +11,12 @@ string variantType2string(variantType type)
         break;
     case variantType::INSETION:
         return "insertion";
-    default:
+        break;
+    case variantType::SUBSTITUTION:
         return "substitution";
+        break;
+    default:
+        return "unknown";
     }
 }
 
@@ -25,6 +29,8 @@ ReadVariant::ReadVariant() //This shall be called only as the head of a linked l
 
 ReadVariant::ReadVariant(unsigned int index, string bases, variantType type, string loc)
 {
+    cout << this;
+    cout << ": " + toString();
     this->index = index;
     this->bases = bases;
     this->type = type;
@@ -39,10 +45,4 @@ string ReadVariant::toString()
 
 ReadVariant::~ReadVariant()
 {
-    if (index==0) // This is an empty variant - created only in the head of a linked list.
-    {    }
-    else
-    {
-        delete next;
-    }
 }

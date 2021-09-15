@@ -40,6 +40,9 @@ ReadVariant* Core::analyzeRead(Read* read)
                 else 
                 {   
                     last->next = new ReadVariant(referenceIndex, string(1, read->seq[readIndex]), variantType::SUBSTITUTION, location);
+                    cout << "SUBSTITUTION: ";
+                    cout << last->next;
+                    cout << '\n';       
                     last = last->next;
                 }
                 ++readIndex;
@@ -54,11 +57,17 @@ ReadVariant* Core::analyzeRead(Read* read)
                 }
                 insertionString.push_back(read->seq[readIndex]);
                 last->next = new ReadVariant(referenceIndex, insertionString, variantType::INSETION, location);
+                cout << "INSERTION: ";
+                cout << last->next;
+                cout << '\n';
                 last = last->next;
                 ++readIndex;
                 break;                
             case cigarState::D:
-                last->next = new ReadVariant(referenceIndex, "", variantType::DELETION, location);
+                last->next = new ReadVariant(referenceIndex, " ", variantType::DELETION, location);
+                cout << "DELETION: ";
+                cout << last->next;
+                cout << '\n';
                 last = last->next;
                 ++referenceIndex;
                 break;
@@ -75,7 +84,7 @@ ReadVariant* Core::analyzeRead(Read* read)
             }
     }
     last = first->next;
-    delete first; // This won't delete whole linked list, because first member is a dummy
+    delete first;
     return last;
 }
 
@@ -88,7 +97,7 @@ unsigned long Core::Variant2int(ReadVariant* variant)
         ret +=1;
     }
     ret<<1;
-    
+    /*
     for (size_t i = 0; i < min(variant->bases.length(), maxInsLength); i++)
     {
         switch (variant->bases[i])
@@ -109,7 +118,8 @@ unsigned long Core::Variant2int(ReadVariant* variant)
             break;
         }
         ret<<2;
-    } // let's suppose there aren't any insertions that differ after 16 same bases...
+    } // let's suppose there aren't any insertions that differ after 16 same bases...*/
+    ret+= hasher(variant->bases);
     ret << (sizeof(ret)*8/2);
     ret += variant->index;
     return ret;    
@@ -117,18 +127,27 @@ unsigned long Core::Variant2int(ReadVariant* variant)
 
 void Core::reportReadVariant(Read* first, Read* second, ReadVariant* firstRV, ReadVariant* secondRV)
 {
+    cout << firstRV;
+    cout << secondRV;
+    cout << "b\n";
+    //cout << "report120\n";
     char refBase = reference->ref[firstRV->index];
+    //cout << "report122\n";
     unsigned long firstHash = Variant2int(firstRV);
     unsigned long secondHash = Variant2int(secondRV);
+    //cout << "report125\n";
     if (firstHash==secondHash)
     {
         reference->reportVariant(firstHash, false, false, true, firstRV, refBase);
-        delete firstRV;
         delete secondRV;
     }
     else
     {
+        //cout << "report134\n";
+        cout << firstRV;
+        cout << "f148\n";
         reportFirstReadVariant(first, firstRV);
+        //cout << "report136\n";
         reportSecondReadVariant(second, secondRV);        
         
     }
@@ -137,57 +156,71 @@ void Core::reportReadVariant(Read* first, Read* second, ReadVariant* firstRV, Re
 
 void Core::reportFirstReadVariant(Read* first, ReadVariant* firstRV)
 {
+    //cout << "report145\n";
+    cout << firstRV;
+    cout << "f\n";
+    //cout << reference->outputVariants();
+    //cout << firstRV->toString();
+    //cout << "report146\n";
     char refBase = reference->ref[firstRV->index];
     unsigned long firstHash = Variant2int(firstRV);
+    //cout << "report148\n";
+    //cout << "report149\n";
     reference->reportVariant(firstHash, true, false, false, firstRV, refBase);
-    delete first;
 }
+
 void Core::reportSecondReadVariant(Read* second, ReadVariant* secondRV)
 {
+    cout << secondRV;
+    cout << "s\n";
+    //cout << "report154\n";
     char refBase = reference->ref[secondRV->index];
     unsigned long secondHash = Variant2int(secondRV);
+    //cout << "report152\n";
     reference->reportVariant(secondHash, false, true, false, secondRV, refBase);
-    delete second;
 }
 
 void Core::analyzeReads(Read* first)
 {
-    cout << "analyzeRead\n";
     Read* second = first->pair;
     ReadVariant* firstVariant = analyzeRead(first);
     ReadVariant* secondVariant = analyzeRead(second);
-    cout << "raprot!\n";
     while (firstVariant != nullptr && secondVariant != nullptr)
     {
         if (firstVariant->index==secondVariant->index)
         {
-            cout << "raprot!1\n";
+            // cout << "raprot!1\n";
             reportReadVariant(first, second, firstVariant, secondVariant);
             firstVariant=firstVariant->next;
             secondVariant=secondVariant->next;
         }
         else if (firstVariant->index<secondVariant->index)
         {
-            cout << "raprot!2\n";
+            // cout << "raprot!2\n";
+            cout << firstVariant;
+            cout << "f201\n";
             reportFirstReadVariant(first, firstVariant);
             firstVariant=firstVariant->next;
         }
         else
         {
-            cout << "raprot!3\n";
+            // cout << "raprot!3\n";
             reportSecondReadVariant(second, secondVariant);
             secondVariant=secondVariant->next;
         }
     }
     while (firstVariant != nullptr)
     {
-        cout << "raprot!4\n";
+        //cout << "raprot!4\n";
+        cout << firstVariant;
+        cout << "f216\n";
         reportFirstReadVariant(first, firstVariant);
+        //cout << "raprot!41\n";
         firstVariant=firstVariant->next;
     }
     while (secondVariant != nullptr)
     {
-        cout << "raprot!5\n";
+        // cout << "raprot!5\n";
         reportSecondReadVariant(second, secondVariant);
         secondVariant=secondVariant->next;
     }
