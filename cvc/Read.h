@@ -1,11 +1,16 @@
+/*
+ * Read.h
+ *
+ *  Created on: Sep 16, 2021
+ *      Author: samuel
+ */
 #pragma once
 
 #include <string>
 #include "Reference.h"
 using namespace std;
 
-enum class cigarState
-{
+enum class cigarState {
 	M, // Match/Mismatch
 	I, // Insertion
 	D, // Deletion
@@ -20,21 +25,17 @@ enum class cigarState
 cigarState char2cigarState(char);
 char cigarState2char(cigarState);
 
-class Read
-{
+class Read {
 private:
-	int currentOffset;
-	bool readable=false;
 	size_t cigarIndex;
 	void setCigarLength();
 	void setCigarType();
 
-
 public:
-	Read();
 	~Read();
 	size_t remainingThisCigar; //goto private
-	Read(string, size_t, string, unsigned int, size_t, string, string, unsigned int, int, string, string);
+	Read(string, size_t, string, unsigned int, size_t, string, string,
+			unsigned int, int, string, string);
 	void setPair(Read*);
 	size_t nextCigar();
 	cigarState cigarType;
@@ -49,7 +50,7 @@ public:
 	unsigned int tlen;
 	string seq;
 	string qual;
-	Read* pair;
+	Read *pair;
 	string toString();
 	void configure(size_t offset); // TODO
 	Base nextBase(); // TODO

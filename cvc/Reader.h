@@ -1,3 +1,9 @@
+/*
+ * Reader.h
+ *
+ *  Created on: Sep 16, 2021
+ *      Author: samuel
+ */
 #pragma once
 
 #include "Read.h"
@@ -7,13 +13,12 @@
 
 using namespace std;
 
-class Reader
-{
+class Reader {
 public:
 	Reader(string);
 	~Reader();
 	string getLine();
-	
+
 	Read* getPairReads();
 	bool open;
 
@@ -24,6 +29,6 @@ private:
 	ifstream myReadFile;
 	string currentLine;
 	string lastLine;
-	Read* nextRead = nullptr;
+	Read *nextRead = nullptr;
 	unsigned int line_index;
 };
