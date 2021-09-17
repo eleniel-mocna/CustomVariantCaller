@@ -1,26 +1,52 @@
-﻿#include <string>
+/*
+ * cvc.cpp
+ *
+ *  Created on: Sep 16, 2021
+ *      Author: samuel
+ */
+
+#include <string>
 #include <fstream>
 #include <iostream>
+#include "Core.h"
 #include "Reader.h"
 #include "Reference.h"
 
-
 using namespace std;
+	
+/**
+ * @brief Output variants including # of supporting pairs and single reads for each variant. 
+ * @param argc # of command line arguments given. 
+ * @param argv[1] path to reference.
+ * @param argv[2] path to the sam file.
+ * 
+ * @todo Add flags settings etc.
+ * @todo Make stdin as the base input option.
+ */
+int main(int argc, char** argv) {
 
-int main()
-{
-    string line;
-    Reader reader("../../../data/correct_sam.sam");
-    Read newRead = *(reader.getPairReads());
-    
-    /*Read pair = *(newRead.pair);
-    cout << pair.toString();
-    Reference refer("../../../data/TP53_F1.fasta");
-    Base b[130] = {};
-    refer.getSequence(1,130,b);*/
-    cout << newRead.toString();
-    //Reference* refer = new Reference("../../../data/TP53_F1.fasta");
-    Reference* refer = new Reference("../../../data/reference/ucsc.hg19.fasta");
-    cout << (*refer).getLength();    
-    return 0;
+	string refPath;
+	string samPath;
+	if(argc==3)
+	{
+		refPath=argv[1];
+		samPath=argv[2];
+	}
+	cerr << "cvc started!\n";
+	ofstream writeFile;
+	Reader reader(samPath);
+	Reference *refer = new Reference(
+			refPath);
+	cerr << "Building Core\n";
+	Core core(refer);
+	cerr << "Core built, geting variants\n";
+	Read *newRead;
+	newRead = reader.getPairReads();
+	while (newRead != nullptr){
+		core.analyzeReads(newRead);
+		newRead = reader.getPairReads();
+	}
+	
+	cout << refer->outputVariants();
+	return 0;
 }

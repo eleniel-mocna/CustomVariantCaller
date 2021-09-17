@@ -52,7 +52,7 @@ void Reference::setLength(ifstream &file) {
 		if (line[0] == '@' || line[0] == ';' || line[0] == '>') //This line is a header or comment
 				{
 			line.erase(0, 1);
-			cout << line + ": " + to_string(length - 1) + '\n';
+			cerr << line + ": " + to_string(length - 1) + '\n';
 			(*chromozome_starts)[line] = length - 1;
 		} else {
 			for (char character : line) {
@@ -73,7 +73,7 @@ void Reference::createArray(ifstream &file) {
 	file.clear();
 	file.seekg(0);
 	ref = *(new vector<char>(length));
-	//matchingReads = *(new vector<unsigned int>(length, 0));
+	matchingReads = *(new vector<unsigned int>(length, 0));
 	//filteredMatchingReads = *(new vector<unsigned int>(length, 0));
 	string line;
 	unsigned int i = 1; //indexing is 1-based
@@ -88,7 +88,7 @@ void Reference::createArray(ifstream &file) {
 					ref[i] = toupper(last);
 					++i;
 					if (i % 100000000 == 0) {
-						cout
+						cerr
 								<< "Loaded base " + to_string(i) + "/"
 										+ to_string(length) + "...\n";
 					}
@@ -105,18 +105,18 @@ unsigned int Reference::getIndex(string file, unsigned int index) {
 }
 
 Reference::Reference(string path) {
-	cout << "Loading reference from storage...\n";
+	cerr << "Loading reference from storage...\n";
 	ifstream file(path);
 	variants = new unordered_map<unsigned long, ReferenceVariant*>;
-	cout << "Reference loaded!\nSetting length...\n";
+	cerr << "Reference loaded!\nSetting length...\n";
 	setLength(file);
-	cout << "Length set: " + to_string(length) + "\nCreating array...\n";
+	cerr << "Length set: " + to_string(length) + "\nCreating array...\n";
 	createArray(file);
-	cout << "Array created, reference initialized!\n";
+	cerr << "Array created, reference initialized!\n";
 }
 
 Reference::~Reference() {
-	delete &ref;
+	//delete &ref;
 }
 
 unsigned int Reference::getLength() {
@@ -136,17 +136,16 @@ void Reference::reportVariant(unsigned long hash, bool first, bool second,
 	refVar->firstCount += first;
 	refVar->secondCount += second;
 	refVar->pairsCount += pair;
-	cout << "delete139\n";
-	cout << variant->toString();
-	delete variant;
 
 }
 
 string Reference::outputVariants() {
+
 	string ret = "";
 	for (auto varIter = variants->begin(); varIter != variants->end();
 			varIter++) {
 		ReferenceVariant *var = varIter->second;
+		var->addDP(matchingReads[var->position]);
 		ret += var->toString();
 		ret += '\n';
 	}

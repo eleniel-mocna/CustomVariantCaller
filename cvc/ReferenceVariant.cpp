@@ -11,6 +11,12 @@ ReferenceVariant::ReferenceVariant(ReadVariant *variant, char refBase) {
 	firstCount = 0;
 	secondCount = 0;
 	pairsCount = 0;
+	DP=0;
+}
+
+void ReferenceVariant::addDP(unsigned int dp)
+{
+	DP=dp;
 }
 
 string ReferenceVariant::toString() {
@@ -30,6 +36,7 @@ string ReferenceVariant::toString() {
 	ret += "FC=" + to_string(firstCount);
 	ret += ";SC=" + to_string(secondCount);
 	ret += ";PC=" + to_string(pairsCount);
+	ret += ";DP=" + to_string(DP);
 	ret += '\t';
 	ret += '.'; // FORMAT
 	return ret;

@@ -13,14 +13,14 @@ string variantType2string(variantType type) {
 	case variantType::DELETION:
 		return "deletion";
 		break;
-	case variantType::INSETION:
+	case variantType::INSERTION:
 		return "insertion";
 		break;
 	case variantType::SUBSTITUTION:
 		return "substitution";
 		break;
 	default:
-		cout << "Unknown\n";
+		cerr << "Unknown\n";
 		return "unknown";
 	}
 }
@@ -37,12 +37,10 @@ ReadVariant::ReadVariant() //This shall be called only as the head of a linked l
 
 ReadVariant::ReadVariant(unsigned int index, string bases, variantType type,
 		string loc) {
-	cout << this;
 	this->index = index;
 	this->bases = bases;
 	this->type = type;
 	this->location = loc;
-	cout << ": " + toString();
 	next = nullptr;
 }
 
@@ -52,4 +50,5 @@ string ReadVariant::toString() {
 }
 
 ReadVariant::~ReadVariant() {
+	delete next;
 }

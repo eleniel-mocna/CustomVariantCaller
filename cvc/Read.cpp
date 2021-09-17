@@ -12,6 +12,14 @@
 
 using namespace std;
 
+/**
+ * @brief Convert char into a cigarState enum.
+ * 
+ * @param inp Char to be converted
+ * 
+ * @throws invalid_argument When CigarString that is not supported is given (implementation error)
+ * @return Resulting cigarState
+ */
 cigarState char2cigarState(char inp) {
 	switch (inp) {
 	case 'M':
@@ -49,13 +57,19 @@ cigarState char2cigarState(char inp) {
 	case 'x':
 		return cigarState::X;
 	default:
-		cout
+		cerr
 				<< "ERROR '" + to_string(inp)
 						+ "' is not a valid cigarState character!\n";
 		throw invalid_argument("Received non-valid cigarState character!");
 	}
 }
 
+/**
+ * @brief Convert cigarState to a char.
+ * 
+ * @param inp cigarState to be converted.
+ * @return Converted char.
+ */
 char cigarState2char(cigarState inp) {
 	switch (inp) {
 	case cigarState::M:
@@ -91,10 +105,24 @@ char cigarState2char(cigarState inp) {
 	}
 }
 
-void Read::configure(size_t offset) {
-	return;
-}
-
+/**
+ * @brief Construct a new Read object.
+ * 
+ * As this class is mainly for holding data about one read, this constructor
+ * takes all information from the sam file and saves it.
+ * 
+ * @param qname Query template NAME
+ * @param flag bitwise FLAG
+ * @param rname References sequence NAME
+ * @param pos 1-based leftmost mapping POSition from the beggining of rname
+ * @param mapq MAPping Quality
+ * @param cigar CIGAR string
+ * @param rnext Ref. name of the mate/next read
+ * @param pnext Position of the mate/next read
+ * @param tlen observed Template LENgth
+ * @param seq segment SEQuence
+ * @param qual ASCII of Phred-scaled base QUALity+33 
+ */
 Read::Read(string qname, size_t flag, string rname, unsigned int pos,
 		size_t mapq, string cigar, string rnext, unsigned int pnext, int tlen,
 		string seq, string qual) {
@@ -112,15 +140,30 @@ Read::Read(string qname, size_t flag, string rname, unsigned int pos,
 	pair = nullptr;
 	cigarIndex = 0;
 	this->cigarType = cigarState::M;
+	variants = nullptr;
 	remainingThisCigar = 1; // We'll subtract 1 on first call of nextCigar
 }
 
+/**
+ * @brief Destroy the Read object, its pair and their variants.
+ * 
+ * This destructor is called in Core::analyzeReads, where this class' lifecycle
+ * ends. 
+ */
 Read::~Read() {
-	cout << "delete119\n";
-	cout << pair->toString();
 	delete pair;
+	delete variants;
 }
 
+/**
+ * @brief Move CigarState one base forward.
+ * 
+ * This method shall be called every time before extracting the next base
+ * in the sequence. After this call this->cigarType will correspond to
+ * the next base's cigar type.
+ * 
+ * @return How many more bases will have the same cigar as the next one.
+ */
 size_t Read::nextCigar() {
 	if (remainingThisCigar == 0) // We overran the cigar string
 			{
@@ -138,6 +181,11 @@ size_t Read::nextCigar() {
 	}
 	return remainingThisCigar;
 }
+
+/**
+ * @brief Call this only from Read::nextCigar, sets the CigarLength.
+ * 
+ */
 void Read::setCigarLength() {
 	assert(
 			remainingThisCigar == 0
@@ -150,6 +198,11 @@ void Read::setCigarLength() {
 	}
 
 }
+
+/**
+ * @brief Call this only from Read::nextCigar, sets the CigarType.
+ * 
+ */
 void Read::setCigarType() {
 	try {
 		cigarType = char2cigarState(cigar[cigarIndex]);
@@ -161,6 +214,11 @@ void Read::setCigarType() {
 	++cigarIndex;
 }
 
+/**
+ * @brief Return nice representation of this Read.
+ * 
+ * @return string 
+ */
 string Read::toString() {
 	string ret = "\nRead: ";
 	ret += "\n    qname: " + qname;
@@ -179,6 +237,11 @@ string Read::toString() {
 	return ret;
 }
 
+/**
+ * @brief Set given argument as the pair of this read.
+ * 
+ * @param new_pair Pair of this read.
+ */
 void Read::setPair(Read *new_pair) {
 	pair = new_pair;
 }

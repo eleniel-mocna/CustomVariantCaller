@@ -27,7 +27,7 @@ public:
 	~Reference();
 	unsigned int getLength();
 	vector<char> ref;
-	//vector<unsigned int> matchingReads;
+	vector<unsigned int> matchingReads;
 	//vector<unsigned int> filteredMatchingReads;
 	unsigned int getIndex(string file_name, unsigned int index);
 	void reportVariant(unsigned long hash, bool first, bool second, bool pair,

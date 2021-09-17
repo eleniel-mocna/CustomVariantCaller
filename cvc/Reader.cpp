@@ -86,6 +86,11 @@ void Reader::skipHeader() {
 Read* Reader::getPairReads() {
 	Read *first = nextRead;
 	Read *second = getNewRead();
+	if (first==nullptr || second==nullptr)
+	{
+		return first; // If first is nullptr than this return nullptr, which is what we want
+					  // If second is nullptr and first not, we return first, which is what we want
+	}
 	if (first->qname == second->qname) //Next read is this ones pair
 			{
 		(*first).setPair(second);

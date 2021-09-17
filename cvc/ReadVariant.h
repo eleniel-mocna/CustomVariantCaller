@@ -11,7 +11,7 @@
 using namespace std;
 
 enum class variantType {
-	DELETION, INSETION, SUBSTITUTION
+	DELETION, INSERTION, SUBSTITUTION
 };
 
 string variantType2string(variantType type);

@@ -19,6 +19,8 @@ using namespace std;
 
 struct ReferenceVariant {
 	string toString();
+	void addDP(unsigned int DP);
+	unsigned int DP;
 	ReferenceVariant(ReadVariant *variant, char referenceBase);
 	unsigned int position;
 	string bases;

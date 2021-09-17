@@ -15,20 +15,35 @@
 #include <functional>
 using namespace std;
 
-class Core {
-private:
 
+/**
+ * @brief This class takes care of analysis of individual pairs of reads.
+ * 
+ * Everything should be expandable for paralelization purpouses, because this
+ * is the bottleneck of this program.
+ * 
+ */
+class Core
+{
+private:
 	Reference *reference;
 	void reportReadVariant(Read *first, Read *second, ReadVariant *firstRV,
-			ReadVariant *secondRV);
-	void reportFirstReadVariant(Read *first, ReadVariant *firstRV);
-	void reportSecondReadVariant(Read *first, ReadVariant *secondRV);
-	unsigned long Variant2int(ReadVariant *variant);
-public:
-	Core(Reference*);
-	~Core();
-	void analyzeReads(Read*);
-	ReadVariant* analyzeRead(Read *first); // Goto private
-	hash<std::string> hasher;
-};
+						   ReadVariant *secondRV);
 
+	void reportFirstReadVariant(Read *first, ReadVariant *firstRV);
+	
+	void reportSecondReadVariant(Read *second, ReadVariant *secondRV);
+	
+	unsigned long Variant2int(ReadVariant *variant);
+
+	ReadVariant *analyzeRead(Read *read);
+
+	hash<std::string> hasher; // TODO: This needs to moved to Reference for parallelisation!
+
+public:
+	Core(Reference *ref);
+
+	~Core();
+
+	void analyzeReads(Read *first);
+};
