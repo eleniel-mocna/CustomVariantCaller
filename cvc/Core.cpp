@@ -64,7 +64,7 @@ ReadVariant *Core::analyzeRead(Read *read)
 	string insertionString; // Needed for solving insertions
 	size_t readIndex = 0;
 
-	while (read->nextCigar())
+	while (read->nextCigar() && referenceIndex < reference->length)
 	{ // This will stop when there is no more cigar string to read
 		// i.e. no more read sequence.
 		string location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset);
@@ -72,8 +72,8 @@ ReadVariant *Core::analyzeRead(Read *read)
 		{
 		case cigarState::M:	 // This is easier and prettier than to create more cases.
 		case cigarState::EQ: // But that would be definitely faster, the question is how much.
-		case cigarState::X:	 // I would guess that quite a bit.
-			reference->matchingReads[referenceIndex] += 1;
+		case cigarState::X:	 // I would guess that quite a bit, if =/X is used, but that is very rarely...
+			reference->totalDepth[referenceIndex] += 1;
 			if (reference->ref[referenceIndex] == read->seq[readIndex])
 			{
 			}
@@ -98,12 +98,14 @@ ReadVariant *Core::analyzeRead(Read *read)
 				insertionString.push_back(read->seq[readIndex - 1]);
 			}
 
-			while (read->nextCigar() != 1) //Read all but the last one, next Cigar will be new
+			while (read->nextCigar() != 1 && referenceIndex < reference->length) //Read all but the last one, next Cigar will be new
 			{
 				insertionString.push_back(read->seq[readIndex]);
 				++readIndex;
 			}
 
+			insertionString.push_back(read->seq[readIndex]);
+			++readIndex;
 			insertionString.push_back(read->seq[readIndex]);
 			last->next = new ReadVariant(referenceIndex - 1, insertionString,
 										 variantType::INSERTION, location);
@@ -239,7 +241,7 @@ void Core::reportSecondReadVariant(Read *second, ReadVariant *secondRV)
  * 
  * This method uses Core::analyzeRead and Core::ReportReadVariant etc. methods
  * and just serves as a junction for everything.
- * It deletes Reads given, which also deletes all Varaints that have originated from them.
+ * It deletes Reads given, which also deletes all Variants that have originated from them.
  * 
  * @exceptsafe If this throws an exception, something went horribly wrong!
  * 
@@ -263,28 +265,34 @@ void Core::analyzeReads(Read *first)
 	{
 		if (firstVariant->index == secondVariant->index)
 		{
+			oldFirstVariant=firstVariant;
+			oldSecondVariant=secondVariant;
 			firstVariant = firstVariant->next;
 			secondVariant = secondVariant->next;
 			reportReadVariant(first, second, oldFirstVariant, oldSecondVariant);
 		}
 		else if (firstVariant->index < secondVariant->index)
 		{
+			oldFirstVariant=firstVariant;
 			firstVariant = firstVariant->next;
 			reportFirstReadVariant(first, oldFirstVariant);
 		}
 		else
 		{
+			oldSecondVariant=secondVariant;
 			secondVariant = secondVariant->next;
 			reportSecondReadVariant(second, oldSecondVariant);
 		}
 	}
 	while (firstVariant != nullptr)
 	{
+		oldFirstVariant=firstVariant;
 		firstVariant = firstVariant->next;
 		reportFirstReadVariant(first, oldFirstVariant);
 	}
 	while (secondVariant != nullptr)
 	{
+		oldSecondVariant=secondVariant;
 		secondVariant = secondVariant->next;
 		reportSecondReadVariant(second, oldSecondVariant);
 	}

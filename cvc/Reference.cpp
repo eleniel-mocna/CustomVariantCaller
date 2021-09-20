@@ -15,35 +15,20 @@
 
 using namespace std;
 
-char Base2Char(Base b) {
-	switch (b) {
-	case Base::A:
-		return 'A';
-		break;
-	case Base::G:
-		return 'G';
-		break;
-	case Base::T:
-		return 'T';
-		break;
-	case Base::C:
-		return 'C';
-		break;
-	default:
-		return '#';
-		break;
-	}
-}
-
-string Base2String(Base *b, size_t length) {
-	string ret = "";
-	for (size_t i = 0; i < length; i++) {
-		ret.push_back(Base2Char(b[i]));
-	}
-	return ret;
-
-}
-
+/**
+ * @brief Read through the whole reference and set the length of it.
+ * 
+ * This also sets the chromozome starts.
+ * The file needs to be opened and sought to beggining, after this call
+ * the file will be sought to the end.
+ * Also, this shall be called only from the constructor.
+ * 
+ * @note An argument could be made not to read the whole reference,
+ * because of the time saving, but this is more defensive and will work
+ * on every type of fasta file.
+ * 
+ * @param file Opened file with the reference
+ */
 void Reference::setLength(ifstream &file) {
 	length = 1; //indexing is 1-based
 	string line;
@@ -64,16 +49,22 @@ void Reference::setLength(ifstream &file) {
 	}
 }
 
-void Reference::skipLine(ifstream &file) {
-	while (file.get() != '\n')
-		;
-}
-
+/**
+ * @brief Fill the reference array with bases and set totalDepths to 0.
+ * 
+ * This method goes through the whole array and fills it with bases
+ * as standardized characters (uppercase).
+ * 
+ * @throw assert when the file doesn't have the same length
+ * 	as determined by Reference::setLength
+ * 
+ * @param file 
+ */
 void Reference::createArray(ifstream &file) {
 	file.clear();
 	file.seekg(0);
 	ref = *(new vector<char>(length));
-	matchingReads = *(new vector<unsigned int>(length, 0));
+	totalDepth = *(new vector<unsigned int>(length, 0));
 	//filteredMatchingReads = *(new vector<unsigned int>(length, 0));
 	string line;
 	unsigned int i = 1; //indexing is 1-based
@@ -97,13 +88,27 @@ void Reference::createArray(ifstream &file) {
 			}
 		}
 	}
-	assert(length == i && "Input file wasn't read correctly!");
+	assert(length == i && "Input file wasn't read correctly!");	
 }
 
+/**
+ * @brief Get array index for human-readable index in the reference.
+ * 
+ * @param file In which file(=chromozome).
+ * @param index Which index in said file(=chromozome).
+ * @return unsigned int 
+ */
 unsigned int Reference::getIndex(string file, unsigned int index) {
 	return (*chromozome_starts)[file] + index;
 }
 
+/**
+ * @brief Construct a new Reference object
+ * 
+ * This reads the whole file and prepares everything.
+ * 
+ * @param path 
+ */
 Reference::Reference(string path) {
 	cerr << "Loading reference from storage...\n";
 	ifstream file(path);
@@ -113,16 +118,36 @@ Reference::Reference(string path) {
 	cerr << "Length set: " + to_string(length) + "\nCreating array...\n";
 	createArray(file);
 	cerr << "Array created, reference initialized!\n";
+	file.close();
 }
 
+/**
+ * @brief Destroy the Reference:: Reference object
+ * 
+ */
 Reference::~Reference() {
-	//delete &ref;
+	delete &ref;
 }
 
+/**
+ * @brief Return the length of the reference
+ * 
+ * @return unsigned int 
+ */
 unsigned int Reference::getLength() {
 	return length;
 }
 
+/**
+ * @brief Save given variant.
+ * 
+ * @param hash Hash generated for this variant and hasmap.
+ * @param first Is this variant supported only by the first Read?
+ * @param second Is this variant supported only by the second Read?
+ * @param pair Is this variant supported by both reads in the pair?
+ * @param variant What variant is reported.
+ * @param refBase What is the base in this variant's location in the reference.
+ */
 void Reference::reportVariant(unsigned long hash, bool first, bool second,
 		bool pair, ReadVariant *variant, char refBase) {
 	ReferenceVariant *refVar;
@@ -139,15 +164,19 @@ void Reference::reportVariant(unsigned long hash, bool first, bool second,
 
 }
 
+/**
+ * @brief Return string as a vcf file of found variants.
+ * 
+ * @return string 
+ */
 string Reference::outputVariants() {
 
 	string ret = "";
 	for (auto varIter = variants->begin(); varIter != variants->end();
 			varIter++) {
 		ReferenceVariant *var = varIter->second;
-		var->addDP(matchingReads[var->position]);
+		var->addDP(totalDepth[var->position]);
 		ret += var->toString();
-		ret += '\n';
 	}
 	return ret;
 }

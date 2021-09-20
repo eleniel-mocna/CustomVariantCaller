@@ -3,6 +3,12 @@
 
 using namespace std;
 
+/**
+ * @brief Construct a new Variant object
+ * 
+ * @param variant What variant should this object represent.
+ * @param refBase What is the reference base for this position.
+ */
 ReferenceVariant::ReferenceVariant(ReadVariant *variant, char refBase) {
 	position = variant->index;
 	bases = variant->bases;
@@ -14,11 +20,26 @@ ReferenceVariant::ReferenceVariant(ReadVariant *variant, char refBase) {
 	DP=0;
 }
 
+/**
+ * @brief Set the total depth. Needs to be set before the output is generated.
+ * 
+ * This shall be called after the whole analysis is finished and before the output.
+ * Should be done by Reference.
+ * 
+ * @param dp 
+ */
 void ReferenceVariant::addDP(unsigned int dp)
 {
 	DP=dp;
 }
 
+/**
+ * @brief return one line of a vcf file describing this variant.
+ * 
+ * @note ReferenceVariant::addDP should be called before this, or DP=0.
+ * 
+ * @return string 
+ */
 string ReferenceVariant::toString() {
 	string ret = "";
 	ret += position_name;
@@ -39,5 +60,6 @@ string ReferenceVariant::toString() {
 	ret += ";DP=" + to_string(DP);
 	ret += '\t';
 	ret += '.'; // FORMAT
+	ret += '\n';
 	return ret;
 }

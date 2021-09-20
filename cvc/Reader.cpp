@@ -10,12 +10,21 @@
 #include <iostream>
 #include <vector>
 #include "Read.h"
-#include <filesystem>
 
 using namespace std;
 
 char HEADER_CHAR = '@';
 
+/**
+ * @brief Construct a new Reader object
+ * 
+ * After this construction the object is ready for use,
+ * it has skipped the header and primed the Reader::getLine method
+ * 
+ * @param file_name path to a SAM file to be read.
+ * 
+ * @todo add a check for file not existing
+ */
 Reader::Reader(string file_name) {
 	myReadFile.open(file_name);
 	open = true;
@@ -25,10 +34,22 @@ Reader::Reader(string file_name) {
 	nextRead = getNewRead();
 }
 
+/**
+ * @brief Destroy the Reader object
+ * 
+ */
 Reader::~Reader() {
 	myReadFile.close();
 }
 
+/**
+ * @brief Return the next line as a string.
+ * 
+ * This is an auxiliary method for Reader::getNewRead,
+ * it takes care of EOF error.
+ * 
+ * @return The next line as a string.
+ */
 string Reader::getLine() {
 	/* Return the next line or empty string if there are no lines to read.*/
 	if (open) {
@@ -45,6 +66,15 @@ string Reader::getLine() {
 
 }
 
+/**
+ * @brief Create a new Read and return the pointer to it.
+ * 
+ * This is an auxiliary method for Reader::getPairReads,
+ * it reads one line and creates a Read from it.
+ * When the whole file is read, it returns nullptr.
+ * 
+ * @return New Read or nullptr
+ */
 Read* Reader::getNewRead() {
 	if (open) {
 		vector<string> splitted = splitString(getLine(), '\t');
@@ -53,6 +83,7 @@ Read* Reader::getNewRead() {
 				stoi(splitted[7]), stoi(splitted[8]), splitted[9],
 				splitted[10]);
 		if (ret->cigar == "*") {
+			// cerr << "ASTERISK FOUND!\n";
 			delete ret;
 			return getNewRead();
 		} else {
@@ -63,6 +94,16 @@ Read* Reader::getNewRead() {
 
 }
 
+/**
+ * @brief Splits string to be given to new Read().
+ * 
+ * This is an auxiliary method for Reader::getNewRead.
+ * It really just splits the string by delimeters...
+ * 
+ * @param input The string to be split.
+ * @param delimeter Character by which the input string is to be split
+ * @return Vector<string> of split strings.
+ */
 vector<string> Reader::splitString(string input, char delimeter) {
 	vector<string> ret;
 	string current = "";
@@ -76,13 +117,29 @@ vector<string> Reader::splitString(string input, char delimeter) {
 	}
 	return ret;
 }
-
+/**
+ * @brief Skips header, called from constructor.
+ * 
+ * Skips the whole header or 1 not commented line.
+ * This method should never be called outside of the constructor.
+ * 
+ */
 void Reader::skipHeader() {
 	do {
 		getline(myReadFile, currentLine);
 	} while (currentLine[0] == HEADER_CHAR);
 }
 
+/**
+ * @brief Get 2 Reads in a pair or 1 Read, when there is no pair or nullptr.
+ * 
+ * This is the main method of this class, call it every time you need a new 
+ * pair of Reads.
+ * It will return a pointer to the first read in the pair, which has a pointer to
+ * the second Read set as Read::pair.
+ * 
+ * @return Pointer to the first Read in a pair.
+ */
 Read* Reader::getPairReads() {
 	Read *first = nextRead;
 	Read *second = getNewRead();

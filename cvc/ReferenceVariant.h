@@ -1,10 +1,4 @@
 /*
- * ReferenceVariant.cpp
- *
- *  Created on: Sep 16, 2021
- *      Author: samuel
- */
-/*
  * ReferenceVariant.h
  *
  *  Created on: Sep 16, 2021
@@ -16,7 +10,14 @@
 #include "ReadVariant.h"
 
 using namespace std;
-
+/**
+ * @brief This structure holds all information about one variant, stored in Reference class.
+ * 
+ * This is only a structure which is used by Reference::reportVariant method.
+ * It just holds information which can be output by ReferenceVariant::toString
+ * as one vcf file line.
+ * 
+ */
 struct ReferenceVariant {
 	string toString();
 	void addDP(unsigned int DP);

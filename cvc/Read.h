@@ -53,7 +53,6 @@ char cigarState2char(cigarState);
  * this is for future-proofing and when all features are added, only the useful
  * once will be kept.
  */
-
 class Read {
 private:
 	size_t cigarIndex;

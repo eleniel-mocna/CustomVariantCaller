@@ -12,17 +12,23 @@
 #include <vector>
 
 using namespace std;
-
+/**
+ * @brief This is the class that reads the SAM file and produces pair reads.
+ * 
+ * The main method is Reader::getPairReads, where Read class starts its lifecycle
+ * or nullptr when there are no more reads left.
+ * 
+ * @todo Make paralelization checks
+ * 
+ */
 class Reader {
 public:
 	Reader(string);
 	~Reader();
-	string getLine();
-
 	Read* getPairReads();
-	bool open;
 
 private:
+	string getLine();
 	Read* getNewRead();
 	void skipHeader();
 	vector<string> splitString(string, char);
@@ -31,4 +37,5 @@ private:
 	string lastLine;
 	Read *nextRead = nullptr;
 	unsigned int line_index;
+	bool open;
 };
