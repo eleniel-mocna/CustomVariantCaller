@@ -98,6 +98,7 @@ There is a lot more work to do with this project beginning such as:
 - Adding more information to the output variants
 - Making I/O classes parallel safe
 - Making multiple cores and running analysis in parallel
+- Add checks for missformed fasta and SAM files
 
 ## Some last words
 
