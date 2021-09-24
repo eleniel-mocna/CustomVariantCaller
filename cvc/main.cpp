@@ -64,7 +64,7 @@ void callVariants(string refPath, string samPath) {
 	cerr << "Core built, geting variants\n";
 	Read *newRead;
 	newRead = reader.getPairReads();
-	while (newRead != nullptr){
+	while (newRead != nullptr){        
 		core.analyzeReads(newRead);
 		newRead = reader.getPairReads();
 	}

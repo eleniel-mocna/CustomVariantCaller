@@ -56,6 +56,7 @@ ReadVariant *Core::analyzeRead(Read *read)
 		return nullptr;
 	}
 
+
 	ReadVariant *first = new ReadVariant(); // This is the head of a linked list.
 	ReadVariant *last = first;
 	unsigned int referenceIndex = reference->getIndex(read->rname, read->pos);
@@ -63,8 +64,9 @@ ReadVariant *Core::analyzeRead(Read *read)
 
 	string insertionString; // Needed for solving insertions
 	size_t readIndex = 0;
+	size_t remainingCigar = read->nextCigar();
 
-	while (read->nextCigar() && referenceIndex < reference->length)
+	while (remainingCigar && referenceIndex < reference->length)
 	{ // This will stop when there is no more cigar string to read
 		// i.e. no more read sequence.
 		string location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset);
@@ -72,7 +74,7 @@ ReadVariant *Core::analyzeRead(Read *read)
 		{
 		case cigarState::M:	 // This is easier and prettier than to create more cases.
 		case cigarState::EQ: // But that would be definitely faster, the question is how much.
-		case cigarState::X:	 // I would guess that quite a bit, if =/X is used, but that is very rarely...
+		case cigarState::X:	 // I would guess that quite a bit, if =/X is used, but that is very rarely...	
 			reference->totalDepth[referenceIndex] += 1;
 			if (reference->ref[referenceIndex] == read->seq[readIndex])
 			{
@@ -98,15 +100,14 @@ ReadVariant *Core::analyzeRead(Read *read)
 				insertionString.push_back(read->seq[readIndex - 1]);
 			}
 
-			while (read->nextCigar() != 1 && referenceIndex < reference->length) //Read all but the last one, next Cigar will be new
+			insertionString.push_back(read->seq[readIndex]);
+			++readIndex;
+			while (remainingCigar != 1 && referenceIndex < reference->length) //Read all but the last one, next Cigar will be new
 			{
+				remainingCigar = read->nextCigar();
 				insertionString.push_back(read->seq[readIndex]);
 				++readIndex;
 			}
-
-			insertionString.push_back(read->seq[readIndex]);
-			++readIndex;
-			insertionString.push_back(read->seq[readIndex]);
 			last->next = new ReadVariant(referenceIndex - 1, insertionString,
 										 variantType::INSERTION, location);
 			last = last->next;
@@ -135,6 +136,7 @@ ReadVariant *Core::analyzeRead(Read *read)
 		default:
 			break;
 		}
+		remainingCigar = read->nextCigar();
 	}
 	read->variants = first;
 	return first->next;
