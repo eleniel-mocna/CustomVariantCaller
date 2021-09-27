@@ -32,6 +32,18 @@ void ReferenceVariant::addDP(unsigned int dp)
 {
 	DP=dp;
 }
+/**
+ * @brief Set the quality depth. Needs to be set before the output is generated.
+ * 
+ * This shall be called after the whole analysis is finished and before the output.
+ * Should be done by Reference.
+ * 
+ * @param qdp 
+ */
+void ReferenceVariant::addQDP(unsigned int qdp)
+{
+	QDP=qdp;
+}
 
 /**
  * @brief return one line of a vcf file describing this variant.
@@ -58,6 +70,7 @@ string ReferenceVariant::toString() {
 	ret += ";SC=" + to_string(secondCount);
 	ret += ";PC=" + to_string(pairsCount);
 	ret += ";DP=" + to_string(DP);
+	ret += ";QDP=" + to_string(QDP);
 	ret += '\t';
 	ret += '.'; // FORMAT
 	ret += '\n';

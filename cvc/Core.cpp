@@ -8,6 +8,8 @@
 #include <string>
 #include <iostream>
 #include "ReadVariant.h"
+#include "Reader.h"
+
 /**
  * @brief Construct a new Core object. 
  *
@@ -16,9 +18,10 @@
  * Only thing to initialize is reference, hasher initializes itself automatically.
  * 
  */
-Core::Core(Reference *ref)
+Core::Core(Reference *ref, Reader *reader)
 {
 	reference = ref;
+	this->reader = reader;
 }
 
 /**
@@ -65,79 +68,126 @@ ReadVariant *Core::analyzeRead(Read *read)
 	string insertionString; // Needed for solving insertions
 	size_t readIndex = 0;
 	size_t remainingCigar = read->nextCigar();
-
-	while (remainingCigar && referenceIndex < reference->length)
-	{ // This will stop when there is no more cigar string to read
-		// i.e. no more read sequence.
-		string location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset);
-		switch (read->cigarType)
-		{
-		case cigarState::M:	 // This is easier and prettier than to create more cases.
-		case cigarState::EQ: // But that would be definitely faster, the question is how much.
-		case cigarState::X:	 // I would guess that quite a bit, if =/X is used, but that is very rarely...	
-			reference->totalDepth[referenceIndex] += 1;
-			if (reference->ref[referenceIndex] == read->seq[readIndex])
+	if (read->mapq >= reference->minMapQ)
+	{	
+		while (remainingCigar && referenceIndex < reference->length)
+		{ // This will stop when there is no more cigar string to read
+			// i.e. no more read sequence.
+			string location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset);
+			switch (read->cigarType)
 			{
-			}
+			case cigarState::M:	 // This is easier and prettier than to create more cases.
+			case cigarState::EQ: // But that would be definitely faster, the question is how much.
+			case cigarState::X:	 // I would guess that quite a bit, if =/X is used, but that is very rarely...	
+				reference->addTotalDepth(referenceIndex);
+				reference->addQTotalDepth(referenceIndex);
+				if (reference->ref[referenceIndex] == read->seq[readIndex])
+				{
+				}
 
-			else
-			{
-				last->next = new ReadVariant(referenceIndex,
-											 string(1, read->seq[readIndex]),
-											 variantType::SUBSTITUTION, location);
-				last = last->next;
-			}
+				else
+				{
+					last->next = new ReadVariant(referenceIndex,
+												string(1, read->seq[readIndex]),
+												variantType::SUBSTITUTION, location);
+					last = last->next;
+				}
 
-			++readIndex;
-			++referenceIndex;
-			break;
+				++readIndex;
+				++referenceIndex;
+				break;
 
-		case cigarState::I:
-			location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset - 1);
-			insertionString = "";
-			if (readIndex > 0) // This should never happen, because first a match should be found...
-			{				   // But this way it will not crash the program.
-				insertionString.push_back(read->seq[readIndex - 1]);
-			}
+			case cigarState::I:
+				location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset - 1);
+				insertionString = "";
+				if (readIndex > 0) // This should never happen, because first a match should be found...
+				{				   // But this way it will not crash the program.
+					insertionString.push_back(read->seq[readIndex - 1]);
+				}
 
-			insertionString.push_back(read->seq[readIndex]);
-			++readIndex;
-			while (remainingCigar != 1 && referenceIndex < reference->length) //Read all but the last one, next Cigar will be new
-			{
-				remainingCigar = read->nextCigar();
 				insertionString.push_back(read->seq[readIndex]);
 				++readIndex;
+				while (remainingCigar != 1 && referenceIndex < reference->length) //Read all but the last one, next Cigar will be new
+				{
+					remainingCigar = read->nextCigar();
+					insertionString.push_back(read->seq[readIndex]);
+					++readIndex;
+				}
+				last->next = new ReadVariant(referenceIndex - 1, insertionString,
+											variantType::INSERTION, location);
+				last = last->next;
+				++readIndex;
+				break;
+
+			case cigarState::D:
+				last->next = new ReadVariant(referenceIndex, ".",
+											variantType::DELETION, location);
+				last = last->next;
+				++referenceIndex;
+				break;
+
+			case cigarState::N:
+				++referenceIndex;
+				break;
+
+			case cigarState::S:
+				++readIndex;
+				break;
+
+			case cigarState::H:
+			case cigarState::P:
+				break;
+
+			default:
+				break;
 			}
-			last->next = new ReadVariant(referenceIndex - 1, insertionString,
-										 variantType::INSERTION, location);
-			last = last->next;
-			++readIndex;
-			break;
-
-		case cigarState::D:
-			last->next = new ReadVariant(referenceIndex, ".",
-										 variantType::DELETION, location);
-			last = last->next;
-			++referenceIndex;
-			break;
-
-		case cigarState::N:
-			++referenceIndex;
-			break;
-
-		case cigarState::S:
-			++readIndex;
-			break;
-
-		case cigarState::H:
-		case cigarState::P:
-			break;
-
-		default:
-			break;
+			remainingCigar = read->nextCigar();
 		}
-		remainingCigar = read->nextCigar();
 	}
+	else
+	{
+		while (remainingCigar && referenceIndex < reference->length)
+		{
+			switch (read->cigarType)
+			{
+			case cigarState::M:	 // This is easier and prettier than to create more cases.
+			case cigarState::EQ: // But that would be definitely faster, the question is how much.
+			case cigarState::X:	 // I would guess that quite a bit, if =/X is used, but that is very rarely...	
+				reference->addTotalDepth(referenceIndex);
+				++readIndex;
+				++referenceIndex;
+				break;
+
+			case cigarState::I:
+				++readIndex;
+				while (remainingCigar != 1 && referenceIndex < reference->length) //Read all but the last one, next Cigar will be new
+				{
+					remainingCigar = read->nextCigar();
+					++readIndex;
+				}
+				++readIndex;
+				break;
+
+			case cigarState::D:
+			case cigarState::N:
+				++referenceIndex;
+				break;
+
+			case cigarState::S:
+				++readIndex;
+				break;
+
+			case cigarState::H:
+			case cigarState::P:
+				break;
+
+			default:
+				break;
+			}
+			remainingCigar = read->nextCigar();
+		}
+	}
+	
 	read->variants = first;
 	return first->next;
 }
@@ -160,7 +210,7 @@ ReadVariant *Core::analyzeRead(Read *read)
 unsigned long Core::Variant2int(ReadVariant *variant)
 {
 	unsigned long ret;
-	ret = hasher(variant->bases);
+	ret = reference->hasher(variant->bases);
 	ret << (sizeof(ret) * 8 / 2);
 	ret += variant->index;
 	return ret;
@@ -239,6 +289,17 @@ void Core::reportSecondReadVariant(Read *second, ReadVariant *secondRV)
 }
 
 /**
+ * @brief Converts base quality from char to size_t
+ * 
+ * @param char to be evaluated
+ * @return size_t 
+ */
+size_t Core::char2Fred(char inp)
+{
+	return int(inp)-33;
+}
+
+/**
  * @brief Analyze a pair of reads and report their variants, this is THE method to call.
  * 
  * This method uses Core::analyzeRead and Core::ReportReadVariant etc. methods
@@ -300,3 +361,18 @@ void Core::analyzeReads(Read *first)
 	}
 	delete first; //This will automatically delete also second
 };
+
+void Core::doAnalysis()
+{
+	Read *newRead;
+	newRead = reader->getPairReads();
+	while (newRead != nullptr){        
+		analyzeReads(newRead);
+		newRead = reader->getPairReads();
+	}
+	cerr << "This analysis has ended!";
+}
+void Core::operator()()
+{
+	doAnalysis();
+}

@@ -26,6 +26,7 @@ using namespace std;
 class Core
 {
 private:
+	Reader *reader;
 	Reference *reference;
 	void reportReadVariant(Read *first, Read *second, ReadVariant *firstRV,
 						   ReadVariant *secondRV);
@@ -38,12 +39,18 @@ private:
 
 	ReadVariant *analyzeRead(Read *read);
 
-	hash<std::string> hasher; // TODO: This needs to moved to Reference for parallelisation!
+	size_t char2Fred(char);
+
+	 // TODO: This needs to moved to Reference for parallelisation!
 
 public:
-	Core(Reference *ref);
+	Core(Reference *ref, Reader *reader);
 
 	~Core();
+
+	void operator()();
+
+	void doAnalysis();
 
 	void analyzeReads(Read *first);
 };

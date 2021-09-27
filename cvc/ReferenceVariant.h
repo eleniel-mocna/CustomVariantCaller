@@ -21,7 +21,9 @@ using namespace std;
 struct ReferenceVariant {
 	string toString();
 	void addDP(unsigned int DP);
+	void addQDP(unsigned int QDP);
 	unsigned int DP;
+	unsigned int QDP;
 	ReferenceVariant(ReadVariant *variant, char referenceBase);
 	unsigned int position;
 	string bases;

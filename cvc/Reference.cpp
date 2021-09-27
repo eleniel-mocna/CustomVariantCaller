@@ -64,7 +64,6 @@ void Reference::createArray(ifstream &file) {
 	file.clear();
 	file.seekg(0);
 	ref = *(new vector<char>(length));
-	totalDepth = *(new vector<unsigned int>(length, 0));
 	//filteredMatchingReads = *(new vector<unsigned int>(length, 0));
 	string line;
 	unsigned int i = 1; //indexing is 1-based
@@ -109,10 +108,14 @@ unsigned int Reference::getIndex(string file, unsigned int index) {
  * 
  * @param path 
  */
-Reference::Reference(string path) {
+Reference::Reference(string path, size_t minMapQ, size_t minQual) {
+	this->minMapQ = minMapQ;
+	this->minQual = minQual;
 	cerr << "Loading reference from storage...\n";
 	ifstream file(path);
 	variants = new unordered_map<unsigned long, ReferenceVariant*>;
+	totalDepth = new unordered_map<unsigned int, unsigned int>;
+	qTotalDepth = new unordered_map<unsigned int, unsigned int>;
 	cerr << "Reference loaded!\nSetting length...\n";
 	setLength(file);
 	cerr << "Length set: " + to_string(length) + "\nCreating array...\n";
@@ -151,7 +154,7 @@ unsigned int Reference::getLength() {
 void Reference::reportVariant(unsigned long hash, bool first, bool second,
 		bool pair, ReadVariant *variant, char refBase) {
 	ReferenceVariant *refVar;
-	variants->end();
+	variantLock.lock();
 	if (variants->find(hash) == variants->end()) {
 		refVar = new ReferenceVariant(variant, refBase);
 		(*variants)[hash] = refVar;
@@ -161,6 +164,7 @@ void Reference::reportVariant(unsigned long hash, bool first, bool second,
 	refVar->firstCount += first;
 	refVar->secondCount += second;
 	refVar->pairsCount += pair;
+	variantLock.unlock();
 
 }
 
@@ -175,8 +179,59 @@ string Reference::outputVariants() {
 	for (auto varIter = variants->begin(); varIter != variants->end();
 			varIter++) {
 		ReferenceVariant *var = varIter->second;
-		var->addDP(totalDepth[var->position]);
+		var->addDP(getTotalDepth(var->position));
+		var->addQDP(getQTotalDepth(var->position));
 		ret += var->toString();
 	}
 	return ret;
+}
+
+void Reference::AddToMap(unsigned int index, unordered_map<unsigned int, unsigned int>* map)
+{
+	if (map->find(index) == map->end())
+	{
+		(*map)[index] = 1;
+	}
+	else
+	{
+		(*map)[index] += 1;
+	}	
+}
+
+void Reference::addTotalDepth(unsigned int index)
+{
+	totalDepthLock.lock();
+	AddToMap(index, totalDepth);
+	totalDepthLock.unlock();
+
+}
+
+void Reference::addQTotalDepth(unsigned int index)
+{
+	qTotalDepthLock.lock();
+	AddToMap(index, qTotalDepth);
+	qTotalDepthLock.unlock();
+}
+
+unsigned int Reference::getFromMap(unsigned int index, unordered_map<unsigned int, unsigned int>* map)
+{
+	if (map->find(index) == map->end())
+	{
+		return 0;
+	}
+	else
+	{
+		return (*map)[index];
+	}
+	
+}
+
+unsigned int Reference::getTotalDepth(unsigned int index)
+{
+	return getFromMap(index, totalDepth);
+}
+
+unsigned int Reference::getQTotalDepth(unsigned int index)
+{
+	return getFromMap(index, qTotalDepth);
 }

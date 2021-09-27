@@ -10,6 +10,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <mutex>
 
 using namespace std;
 /**
@@ -28,6 +29,7 @@ public:
 	Read* getPairReads();
 
 private:
+	mutex getLock;
 	string getLine();
 	Read* getNewRead();
 	void skipHeader();

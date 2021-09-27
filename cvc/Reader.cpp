@@ -141,10 +141,12 @@ void Reader::skipHeader() {
  * @return Pointer to the first Read in a pair.
  */
 Read* Reader::getPairReads() {
+	getLock.lock();
 	Read *first = nextRead;
 	Read *second = getNewRead();
 	if (first==nullptr || second==nullptr)
 	{
+		getLock.unlock();
 		return first; // If first is nullptr than this return nullptr, which is what we want
 					  // If second is nullptr and first not, we return first, which is what we want
 	}
@@ -152,10 +154,12 @@ Read* Reader::getPairReads() {
 			{
 		(*first).setPair(second);
 		nextRead = getNewRead();
+		getLock.unlock();
 		return first;
 	} else //We don't have a pair
 	{
 		nextRead = second;
+		getLock.unlock();
 		return first;
 	}
 }
