@@ -39,7 +39,7 @@ private:
 
 	ReadVariant *analyzeRead(Read *read);
 
-	size_t char2Fred(char);
+	static size_t char2Fred(char);
 
 	 // TODO: This needs to moved to Reference for parallelisation!
 

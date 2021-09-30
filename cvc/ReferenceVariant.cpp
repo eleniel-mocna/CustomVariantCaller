@@ -76,3 +76,21 @@ string ReferenceVariant::toString() {
 	ret += '\n';
 	return ret;
 }
+
+string ReferenceVariant::toTSV()
+{
+	string ret = "";
+	ret += position_name;
+	ret += '\t';
+	ret += referenceBase;
+	ret += '\t';
+	ret += bases;
+	ret += '\t';
+	ret += to_string(firstCount) + '\t';
+	ret += to_string(secondCount) + '\t';
+	ret += to_string(pairsCount) + '\t';
+	ret += to_string(DP) + '\t';
+	ret += to_string(QDP) + '\t';
+	ret += '\n';
+	return ret;
+}

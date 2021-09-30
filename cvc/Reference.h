@@ -43,6 +43,9 @@ public:
 	size_t minMapQ;
 	size_t minQual;
 	hash<std::string> hasher;
+	unordered_map<unsigned long, ReferenceVariant*> *variants;
+	unsigned int getTotalDepth(unsigned int index);
+	unsigned int getQTotalDepth(unsigned int index);
 
 private:
 	mutex variantLock;
@@ -55,10 +58,7 @@ private:
 	void setLength(ifstream&);
 	void createArray(ifstream&);
 	void AddToMap(unsigned int index, unordered_map<unsigned int, unsigned int>* map);
-	unsigned int getTotalDepth(unsigned int index);
-	unsigned int getQTotalDepth(unsigned int index);
 	unsigned int getFromMap(unsigned int index, unordered_map<unsigned int, unsigned int>* map);
 	char bases[8] = { 'A', 'a', 'G', 'g', 'T', 't', 'C', 'c' };
 	unordered_map<string, unsigned int> *chromozome_starts;
-	unordered_map<unsigned long, ReferenceVariant*> *variants;
 };

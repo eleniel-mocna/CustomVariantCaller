@@ -13,6 +13,7 @@
 #include "Reader.h"
 #include "Reference.h"
 #include <thread>
+#include "Writer.h"
 
 using namespace std;
 /**
@@ -54,9 +55,9 @@ class InputParser{
  * @param refPath Path to the reference.
  * @param samPath Path to the SAMfile.
  */
-void callVariants(string refPath, string samPath, size_t minMapQ, size_t minQual, size_t nThreads) {
+void callVariants(string refPath, string samPath, size_t minMapQ, size_t minQual, size_t nThreads, bool vcf) {
     chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-	cerr << "cvc started!\n";
+	cerr << "CVC started!\n";
 	ofstream writeFile;
 	Reader* reader = new Reader(samPath);
 	Reference *refer = new Reference(
@@ -67,23 +68,24 @@ void callVariants(string refPath, string samPath, size_t minMapQ, size_t minQual
 	cerr << "Building Core\n";
     Core core(refer, reader);
 	cerr << "Core built, geting variants\n";
-    for (size_t i = 0; i < nThreads; i++)
-    {
-        (*threads)[i] = new thread(core);
-    }
+    // for (size_t i = 0; i < nThreads; i++)
+    // {
+    //     (*threads)[i] = new thread(core);
+    // }
     end = chrono::steady_clock::now();
     cerr << "Cores started after " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
     cerr << "Threads started\n";
-    for (size_t i = 0; i < nThreads; i++)
-    {
-        cerr << "waiting for thread " + to_string(i) + "\n";
-        (*threads)[i]->join();
-    }
+    core();
+    // for (size_t i = 0; i < nThreads; i++)
+    // {
+    //     cerr << "waiting for thread " + to_string(i) + "\n";
+    //     (*threads)[i]->join();
+    // }
     
     end = chrono::steady_clock::now();
     cerr << "Threads finished after " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
     cerr << "All threads have finished, doing output!\n";
-	cout << refer->outputVariants();
+	Writer().outputTSV(refer);
     cerr << "Variants finished, program ended succesfully!\n";
     end = chrono::steady_clock::now();
     cerr << "Program done after " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
@@ -96,14 +98,15 @@ int main(int argc, char **argv){
         cout << "Usage: VariantCaller [options] SAM_file...\n"
                 "Options:\n"
                 "    -h --help			Display this information\n"
-                "    --reference		Path to the reference fasta file (default \"reference/ucsc.hg19.fasta\")\n"
+                "    --reference		Path to the reference fasta file (default \"../../data/reference/ucsc.hg19.fasta\")\n"
                 "    --mapq             Minimum mapping quality of reads to be considered.\n"
-                "    --threads          Number of threads to run with\n";
+                "    --threads          Number of threads to run with. (Disabled)\n"
+                "    --vcf              The output should be formated as vcf, false for tsv [true].\n";
         return 0;
     }
     string referenceFilename = input.getCmdOption("--reference");
     if (referenceFilename.empty()){
-        referenceFilename = "reference/ucsc.hg19.fasta";
+        referenceFilename = "../../data/reference/ucsc.hg19.fasta";
     }
     size_t minMapQ;
     try
@@ -124,14 +127,34 @@ int main(int argc, char **argv){
         minQual = 0;
     }
     string samFilename = argv[argc - 1];
+
+    bool vcf;
+    try
+    {
+        if (toupper(input.getCmdOption("--vcf")[0])=='F'
+        || input.getCmdOption("--vcf")[0]=='0')
+        {
+            vcf = false;
+        }
+        else if (toupper(input.getCmdOption("--vcf")[0])=='T'
+        || input.getCmdOption("--vcf")[0]=='1'
+        || referenceFilename.empty())
+        {
+            vcf = true;
+        }
+        else
+        {
+            cerr << "VCF not understood, exporting as vcf\n";
+            vcf = true;
+        }                
+    }
+    catch(const std::exception& e)
+    {
+        vcf = true;
+    }
     
+
     
-    cout << "##fileformat=VCFv4.3\n" // TODO move this into a file and own function
-            "##INFO=<ID=FC,Number=1,Type=Integer,Description=\"Number of first reads supporting variant\">\n"
-            "##INFO=<ID=SC,Number=1,Type=Integer,Description=\"Number of second reads supporting variant\">\n"
-            "##INFO=<ID=PC,Number=1,Type=Integer,Description=\"Number of whole pairs supporting variant\">\n"
-            "##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total depth\">\n"
-            "#CHROM POS      ID         REF   ALT    QUAL  FILTER   INFO\n";
-    callVariants(referenceFilename, samFilename, minMapQ, minQual, 20);
+    callVariants(referenceFilename, samFilename, minMapQ, minQual, 20, vcf);
     return 0;
 }

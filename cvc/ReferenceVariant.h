@@ -20,6 +20,7 @@ using namespace std;
  */
 struct ReferenceVariant {
 	string toString();
+	string toTSV();
 	void addDP(unsigned int DP);
 	void addQDP(unsigned int QDP);
 	unsigned int DP;

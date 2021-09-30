@@ -173,18 +173,6 @@ void Reference::reportVariant(unsigned long hash, bool first, bool second,
  * 
  * @return string 
  */
-string Reference::outputVariants() {
-
-	string ret = "";
-	for (auto varIter = variants->begin(); varIter != variants->end();
-			varIter++) {
-		ReferenceVariant *var = varIter->second;
-		var->addDP(getTotalDepth(var->position));
-		var->addQDP(getQTotalDepth(var->position));
-		ret += var->toString();
-	}
-	return ret;
-}
 
 void Reference::AddToMap(unsigned int index, unordered_map<unsigned int, unsigned int>* map)
 {
