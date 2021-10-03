@@ -35,6 +35,74 @@ Core::~Core()
 }
 
 /**
+ * @brief  Solve Deletion on current indices
+ * @note   Called from Core::analyzeRead
+ * @param  *read: currently analyzed read
+ */
+void Core::solveD(Read *read)
+{
+	string location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset);
+	last->next = new ReadVariant(referenceIndex, ".",
+							variantType::DELETION, location);
+	last = last->next;
+	++referenceIndex;
+}
+
+/**
+ * @brief  Solve insertion on current indices
+ * @note   Called from Core::analyzeRead
+ * @param  *read: currently analyzed read
+ */
+void Core::solveI(Read *read)
+{
+	string location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset - 1);
+	string insertionString = "";
+	if (readIndex > 0) // This should never happen, because first a match should be found...
+	{				   // But this way it will not crash the program.
+		insertionString.push_back(read->seq[readIndex - 1]);
+	}
+
+	insertionString.push_back(read->seq[readIndex]);
+	++readIndex;
+	while (remainingCigar != 1 && referenceIndex < reference->length) //Read all but the last one, next Cigar will be new
+	{
+		remainingCigar = read->nextCigar();
+		insertionString.push_back(read->seq[readIndex]);
+		++readIndex;
+	}
+	last->next = new ReadVariant(referenceIndex - 1, insertionString,
+								variantType::INSERTION, location);
+	last = last->next;
+	++readIndex;
+}
+
+/**
+ * @brief  Solve match/mismatch on current indices
+ * @note   Called from Core::analyzeRead
+ * @param  *read: currently analyzed read
+ */
+void Core::solveM(Read *read)
+{
+	string location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset);
+	reference->addTotalDepth(referenceIndex);
+					reference->addQTotalDepth(referenceIndex);
+					if (reference->ref[referenceIndex] == read->seq[readIndex])
+					{
+					}
+
+					else
+					{
+						last->next = new ReadVariant(referenceIndex,
+													string(1, read->seq[readIndex]),
+													variantType::SUBSTITUTION, location);
+						last = last->next;
+					}
+
+					++readIndex;
+					++referenceIndex;
+}
+
+/**
  * @brief Find all variants in given Read.
  * 
  *
@@ -61,13 +129,13 @@ ReadVariant *Core::analyzeRead(Read *read)
 
 
 	ReadVariant *first = new ReadVariant(); // This is the head of a linked list.
-	ReadVariant *last = first;
+	last = first;
 	unsigned int referenceIndex = reference->getIndex(read->rname, read->pos);
 	unsigned int referenceOffset = referenceIndex;
 
 	string insertionString; // Needed for solving insertions
-	size_t readIndex = 0;
-	size_t remainingCigar = read->nextCigar();
+	readIndex = 0;
+	remainingCigar = read->nextCigar();
 	if (read->mapq >= reference->minMapQ)
 	{	
 		while (remainingCigar && referenceIndex < reference->length)
@@ -75,57 +143,20 @@ ReadVariant *Core::analyzeRead(Read *read)
 			// i.e. no more read sequence.
 			if (char2Fred(read->qual[readIndex]) >= reference->minQual)
 			{			
-				string location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset);
 				switch (read->cigarType)
 				{
 				case cigarState::M:	 // This is easier and prettier than to create more cases.
 				case cigarState::EQ: // But that would be definitely faster, the question is how much.
 				case cigarState::X:	 // I would guess that quite a bit, if =/X is used, but that is very rarely...	
-					reference->addTotalDepth(referenceIndex);
-					reference->addQTotalDepth(referenceIndex);
-					if (reference->ref[referenceIndex] == read->seq[readIndex])
-					{
-					}
-
-					else
-					{
-						last->next = new ReadVariant(referenceIndex,
-													string(1, read->seq[readIndex]),
-													variantType::SUBSTITUTION, location);
-						last = last->next;
-					}
-
-					++readIndex;
-					++referenceIndex;
+					solveM(read);
 					break;
 
 				case cigarState::I:
-					location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset - 1);
-					insertionString = "";
-					if (readIndex > 0) // This should never happen, because first a match should be found...
-					{				   // But this way it will not crash the program.
-						insertionString.push_back(read->seq[readIndex - 1]);
-					}
-
-					insertionString.push_back(read->seq[readIndex]);
-					++readIndex;
-					while (remainingCigar != 1 && referenceIndex < reference->length) //Read all but the last one, next Cigar will be new
-					{
-						remainingCigar = read->nextCigar();
-						insertionString.push_back(read->seq[readIndex]);
-						++readIndex;
-					}
-					last->next = new ReadVariant(referenceIndex - 1, insertionString,
-												variantType::INSERTION, location);
-					last = last->next;
-					++readIndex;
+					solveI(read);
 					break;
 
 				case cigarState::D:
-					last->next = new ReadVariant(referenceIndex, ".",
-												variantType::DELETION, location);
-					last = last->next;
-					++referenceIndex;
+					solveD(read);
 					break;
 
 				case cigarState::N:
@@ -144,7 +175,6 @@ ReadVariant *Core::analyzeRead(Read *read)
 					break;
 				}
 			}
-			else cerr << "THIS is wrong!!\n";
 			remainingCigar = read->nextCigar();
 		}
 	}
@@ -191,8 +221,6 @@ ReadVariant *Core::analyzeRead(Read *read)
 			remainingCigar = read->nextCigar();
 		}
 	}
-	
-	read->variants = first;
 	return first->next;
 }
 

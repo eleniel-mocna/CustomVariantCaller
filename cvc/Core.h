@@ -41,7 +41,21 @@ private:
 
 	static size_t char2Fred(char);
 
-	 // TODO: This needs to moved to Reference for parallelisation!
+	void solveM(Read *read);
+
+	void solveI(Read *read);
+
+	void solveD(Read *read);
+
+	size_t readIndex;
+
+	size_t remainingCigar;
+
+	unsigned int referenceIndex;
+
+	unsigned int referenceOffset;
+
+	ReadVariant *last;
 
 public:
 	Core(Reference *ref, Reader *reader);
