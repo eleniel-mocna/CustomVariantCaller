@@ -15,7 +15,6 @@
 #include <functional>
 using namespace std;
 
-
 /**
  * @brief This class takes care of analysis of individual pairs of reads.
  * 
@@ -32,9 +31,9 @@ private:
 						   ReadVariant *secondRV);
 
 	void reportFirstReadVariant(Read *first, ReadVariant *firstRV);
-	
+
 	void reportSecondReadVariant(Read *second, ReadVariant *secondRV);
-	
+
 	unsigned long Variant2int(ReadVariant *variant);
 
 	ReadVariant *analyzeRead(Read *read);
@@ -56,6 +55,12 @@ private:
 	unsigned int referenceOffset;
 
 	ReadVariant *last;
+
+	void solveMapQPass(Read *read);
+
+	void solveMapQFail(Read *read);
+
+	bool filter(Read *read);
 
 public:
 	Core(Reference *ref, Reader *reader);

@@ -43,7 +43,7 @@ void Core::solveD(Read *read)
 {
 	string location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset);
 	last->next = new ReadVariant(referenceIndex, ".",
-							variantType::DELETION, location);
+								 variantType::DELETION, location);
 	last = last->next;
 	++referenceIndex;
 }
@@ -71,7 +71,7 @@ void Core::solveI(Read *read)
 		++readIndex;
 	}
 	last->next = new ReadVariant(referenceIndex - 1, insertionString,
-								variantType::INSERTION, location);
+								 variantType::INSERTION, location);
 	last = last->next;
 	++readIndex;
 }
@@ -85,23 +85,133 @@ void Core::solveM(Read *read)
 {
 	string location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset);
 	reference->addTotalDepth(referenceIndex);
-					reference->addQTotalDepth(referenceIndex);
-					if (reference->ref[referenceIndex] == read->seq[readIndex])
-					{
-					}
+	reference->addQTotalDepth(referenceIndex);
+	if (reference->ref[referenceIndex] == read->seq[readIndex])
+	{
+	}
 
-					else
-					{
-						last->next = new ReadVariant(referenceIndex,
-													string(1, read->seq[readIndex]),
-													variantType::SUBSTITUTION, location);
-						last = last->next;
-					}
+	else
+	{
+		last->next = new ReadVariant(referenceIndex,
+									 string(1, read->seq[readIndex]),
+									 variantType::SUBSTITUTION, location);
+		last = last->next;
+	}
 
-					++readIndex;
-					++referenceIndex;
+	++readIndex;
+	++referenceIndex;
 }
 
+/**
+ * @brief Solve a read that has passed all filters
+ * 
+ * @param read to be solved.
+ */
+void Core::solveMapQPass(Read *read)
+{
+	while (remainingCigar && referenceIndex < reference->length)
+	{ // This will stop when there is no more cigar string to read
+		// i.e. no more read sequence.
+		if (char2Fred(read->qual[readIndex]) >= reference->minQual)
+		{
+			switch (read->cigarType)
+			{
+			case cigarState::M:	 // This is easier and prettier than to create more cases.
+			case cigarState::EQ: // But that would be definitely faster, the question is how much.
+			case cigarState::X:	 // I would guess that quite a bit, if =/X is used, but that is very rarely...
+				solveM(read);
+				break;
+
+			case cigarState::I:
+				solveI(read);
+				break;
+
+			case cigarState::D:
+				solveD(read);
+				break;
+
+			case cigarState::N:
+				++referenceIndex;
+				break;
+
+			case cigarState::S:
+				++readIndex;
+				break;
+
+			case cigarState::H:
+			case cigarState::P:
+				break;
+
+			default:
+				break;
+			}
+		}
+		remainingCigar = read->nextCigar();
+	}
+}
+
+/**
+ * @brief Solve a read that has failed some filters.
+ * 
+ * @param read to be solved.
+ */
+void Core::solveMapQFail(Read *read)
+{
+	while (remainingCigar && referenceIndex < reference->length)
+	{
+		switch (read->cigarType)
+		{
+		case cigarState::M:	 // This is easier and prettier than to create more cases.
+		case cigarState::EQ: // But that would be definitely faster, the question is how much.
+		case cigarState::X:	 // I would guess that quite a bit, if =/X is used, but that is very rarely...
+			reference->addTotalDepth(referenceIndex);
+			++readIndex;
+			++referenceIndex;
+			break;
+
+		case cigarState::I:
+			++readIndex;
+			while (remainingCigar != 1 && referenceIndex < reference->length) //Read all but the last one, next Cigar will be new
+			{
+				remainingCigar = read->nextCigar();
+				++readIndex;
+			}
+			++readIndex;
+			break;
+
+		case cigarState::D:
+		case cigarState::N:
+			++referenceIndex;
+			break;
+
+		case cigarState::S:
+			++readIndex;
+			break;
+
+		case cigarState::H:
+		case cigarState::P:
+			break;
+
+		default:
+			break;
+		}
+		remainingCigar = read->nextCigar();
+	}
+}
+
+/**
+ * @brief Figure out if this read passes all filters.
+ * 
+ * @param read to be filtered.
+ * @return true: Read passes all filters.
+ * @return false: Read failed some filters.
+ */
+bool Core::filter(Read *read)
+{
+	bool ret;
+	ret = (read->mapq >= reference->minMapQ);
+	return ret;
+}
 /**
  * @brief Find all variants in given Read.
  * 
@@ -127,99 +237,21 @@ ReadVariant *Core::analyzeRead(Read *read)
 		return nullptr;
 	}
 
-
 	ReadVariant *first = new ReadVariant(); // This is the head of a linked list.
 	last = first;
-	unsigned int referenceIndex = reference->getIndex(read->rname, read->pos);
-	unsigned int referenceOffset = referenceIndex;
+	referenceIndex = reference->getIndex(read->rname, read->pos);
+	referenceOffset = referenceIndex;
 
 	string insertionString; // Needed for solving insertions
 	readIndex = 0;
 	remainingCigar = read->nextCigar();
-	if (read->mapq >= reference->minMapQ)
-	{	
-		while (remainingCigar && referenceIndex < reference->length)
-		{ // This will stop when there is no more cigar string to read
-			// i.e. no more read sequence.
-			if (char2Fred(read->qual[readIndex]) >= reference->minQual)
-			{			
-				switch (read->cigarType)
-				{
-				case cigarState::M:	 // This is easier and prettier than to create more cases.
-				case cigarState::EQ: // But that would be definitely faster, the question is how much.
-				case cigarState::X:	 // I would guess that quite a bit, if =/X is used, but that is very rarely...	
-					solveM(read);
-					break;
-
-				case cigarState::I:
-					solveI(read);
-					break;
-
-				case cigarState::D:
-					solveD(read);
-					break;
-
-				case cigarState::N:
-					++referenceIndex;
-					break;
-
-				case cigarState::S:
-					++readIndex;
-					break;
-
-				case cigarState::H:
-				case cigarState::P:
-					break;
-
-				default:
-					break;
-				}
-			}
-			remainingCigar = read->nextCigar();
-		}
+	if (filter(read))
+	{
+		solveMapQPass(read);
 	}
 	else
 	{
-		while (remainingCigar && referenceIndex < reference->length)
-		{
-			switch (read->cigarType)
-			{
-			case cigarState::M:	 // This is easier and prettier than to create more cases.
-			case cigarState::EQ: // But that would be definitely faster, the question is how much.
-			case cigarState::X:	 // I would guess that quite a bit, if =/X is used, but that is very rarely...	
-				reference->addTotalDepth(referenceIndex);
-				++readIndex;
-				++referenceIndex;
-				break;
-
-			case cigarState::I:
-				++readIndex;
-				while (remainingCigar != 1 && referenceIndex < reference->length) //Read all but the last one, next Cigar will be new
-				{
-					remainingCigar = read->nextCigar();
-					++readIndex;
-				}
-				++readIndex;
-				break;
-
-			case cigarState::D:
-			case cigarState::N:
-				++referenceIndex;
-				break;
-
-			case cigarState::S:
-				++readIndex;
-				break;
-
-			case cigarState::H:
-			case cigarState::P:
-				break;
-
-			default:
-				break;
-			}
-			remainingCigar = read->nextCigar();
-		}
+		solveMapQFail(read);
 	}
 	return first->next;
 }
@@ -328,7 +360,7 @@ void Core::reportSecondReadVariant(Read *second, ReadVariant *secondRV)
  */
 size_t Core::char2Fred(char inp)
 {
-	return int(inp)-33;
+	return int(inp) - 33;
 }
 
 /**
@@ -348,7 +380,7 @@ void Core::analyzeReads(Read *first)
 	{
 		return;
 	}
-	
+
 	Read *second = first->pair;
 	ReadVariant *firstVariant = analyzeRead(first);
 	ReadVariant *secondVariant = analyzeRead(second);
@@ -360,34 +392,34 @@ void Core::analyzeReads(Read *first)
 	{
 		if (firstVariant->index == secondVariant->index)
 		{
-			oldFirstVariant=firstVariant;
-			oldSecondVariant=secondVariant;
+			oldFirstVariant = firstVariant;
+			oldSecondVariant = secondVariant;
 			firstVariant = firstVariant->next;
 			secondVariant = secondVariant->next;
 			reportReadVariant(first, second, oldFirstVariant, oldSecondVariant);
 		}
 		else if (firstVariant->index < secondVariant->index)
 		{
-			oldFirstVariant=firstVariant;
+			oldFirstVariant = firstVariant;
 			firstVariant = firstVariant->next;
 			reportFirstReadVariant(first, oldFirstVariant);
 		}
 		else
 		{
-			oldSecondVariant=secondVariant;
+			oldSecondVariant = secondVariant;
 			secondVariant = secondVariant->next;
 			reportSecondReadVariant(second, oldSecondVariant);
 		}
 	}
 	while (firstVariant != nullptr)
 	{
-		oldFirstVariant=firstVariant;
+		oldFirstVariant = firstVariant;
 		firstVariant = firstVariant->next;
 		reportFirstReadVariant(first, oldFirstVariant);
 	}
 	while (secondVariant != nullptr)
 	{
-		oldSecondVariant=secondVariant;
+		oldSecondVariant = secondVariant;
 		secondVariant = secondVariant->next;
 		reportSecondReadVariant(second, oldSecondVariant);
 	}
@@ -398,7 +430,8 @@ void Core::doAnalysis()
 {
 	Read *newRead;
 	newRead = reader->getPairReads();
-	while (newRead != nullptr){        
+	while (newRead != nullptr)
+	{
 		analyzeReads(newRead);
 		newRead = reader->getPairReads();
 	}
