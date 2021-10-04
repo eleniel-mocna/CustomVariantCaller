@@ -98,7 +98,7 @@ int main(int argc, char **argv){
         cout << "Usage: VariantCaller [options] SAM_file...\n"
                 "Options:\n"
                 "    -h --help			Display this information\n"
-                "    --reference		Path to the reference fasta file (default \"../../data/reference/ucsc.hg19.fasta\")\n"
+                "    --reference		Path to the reference fasta file (default \"/reference/ucsc.hg19.fasta\")\n"
                 "    --mapq             Minimum mapping quality of reads to be considered.\n"
                 "    --threads          Number of threads to run with. (Disabled)\n"
                 "    --vcf              The output should be formated as vcf, false for tsv [true].\n";
@@ -106,7 +106,7 @@ int main(int argc, char **argv){
     }
     string referenceFilename = input.getCmdOption("--reference");
     if (referenceFilename.empty()){
-        referenceFilename = "../../data/reference/ucsc.hg19.fasta";
+        referenceFilename = "/reference/ucsc.hg19.fasta";
     }
     size_t minMapQ;
     try

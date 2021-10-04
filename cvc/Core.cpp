@@ -112,6 +112,7 @@ void Core::solveMapQPass(Read *read)
 	while (remainingCigar && referenceIndex < reference->length)
 	{ // This will stop when there is no more cigar string to read
 		// i.e. no more read sequence.
+
 		if (char2Fred(read->qual[readIndex]) >= reference->minQual)
 		{
 			switch (read->cigarType)
@@ -382,6 +383,18 @@ void Core::analyzeReads(Read *first)
 	}
 
 	Read *second = first->pair;
+	if (first->flag & 0b01000000 == 0)
+	{
+		cerr << "Backward strand marked as forward!\n";
+		cerr << first->toString();
+	}
+	if (second != nullptr && second->flag & 0b10000000 == 0)
+	{
+		cerr << "Forward strand marked as backward!\n";
+		cerr << first->toString();
+		cerr << second->toString();
+	}
+
 	ReadVariant *firstVariant = analyzeRead(first);
 	ReadVariant *secondVariant = analyzeRead(second);
 	ReadVariant *oldFirstVariant;

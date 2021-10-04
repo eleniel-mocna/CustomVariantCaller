@@ -12,6 +12,21 @@
 
 using namespace std;
 
+string toBinary(size_t n)
+{
+	string r;
+	for (size_t i = 0; i < 12; i++)
+	{
+		r = (n % 2 == 0 ? "0" : "1") + r;
+		n /= 2;
+		if (i == 3 || i == 7)
+		{
+			r = ' ' + r;
+		}
+	}
+	return r;
+}
+
 /**
  * @brief Convert char into a cigarState enum.
  * 
@@ -20,8 +35,10 @@ using namespace std;
  * @throws invalid_argument When CigarString that is not supported is given (implementation error)
  * @return Resulting cigarState
  */
-cigarState char2cigarState(char inp) {
-	switch (inp) {
+cigarState char2cigarState(char inp)
+{
+	switch (inp)
+	{
 	case 'M':
 	case 'm':
 		return cigarState::M;
@@ -58,8 +75,7 @@ cigarState char2cigarState(char inp) {
 		return cigarState::X;
 	default:
 		cerr
-				<< "ERROR '" + to_string(inp)
-						+ "' is not a valid cigarState character!\n";
+			<< "ERROR '" + to_string(inp) + "' is not a valid cigarState character!\n";
 		throw invalid_argument("Received non-valid cigarState character!");
 	}
 }
@@ -70,8 +86,10 @@ cigarState char2cigarState(char inp) {
  * @param inp cigarState to be converted.
  * @return Converted char.
  */
-char cigarState2char(cigarState inp) {
-	switch (inp) {
+char cigarState2char(cigarState inp)
+{
+	switch (inp)
+	{
 	case cigarState::M:
 		return 'M';
 		break;
@@ -101,7 +119,7 @@ char cigarState2char(cigarState inp) {
 		break;
 	default:
 		throw invalid_argument(
-				"There are more cigar states than this? Ooops...");
+			"There are more cigar states than this? Ooops...");
 	}
 }
 
@@ -124,8 +142,9 @@ char cigarState2char(cigarState inp) {
  * @param qual ASCII of Phred-scaled base QUALity+33 
  */
 Read::Read(string qname, size_t flag, string rname, unsigned int pos,
-		size_t mapq, string cigar, string rnext, unsigned int pnext, int tlen,
-		string seq, string qual) {
+		   size_t mapq, string cigar, string rnext, unsigned int pnext, int tlen,
+		   string seq, string qual)
+{
 	this->qname = qname;
 	this->flag = flag;
 	this->rname = rname;
@@ -150,7 +169,8 @@ Read::Read(string qname, size_t flag, string rname, unsigned int pos,
  * This destructor is called in Core::analyzeReads, where this class' lifecycle
  * ends. 
  */
-Read::~Read() {
+Read::~Read()
+{
 	delete pair;
 	delete variants;
 }
@@ -164,18 +184,23 @@ Read::~Read() {
  * 
  * @return How many more bases will have the same cigar as the next one.
  */
-size_t Read::nextCigar() {
+size_t Read::nextCigar()
+{
 	if (remainingThisCigar == 0) // We overran the cigar string
-			{
+	{
 		return 0;
 	}
 
 	--remainingThisCigar;
-	if (remainingThisCigar == 0) {
-		if (cigarIndex < cigar.length()) {
+	if (remainingThisCigar == 0)
+	{
+		if (cigarIndex < cigar.length())
+		{
 			setCigarLength();
 			setCigarType();
-		} else {
+		}
+		else
+		{
 			remainingThisCigar = 0;
 		}
 	}
@@ -186,27 +211,31 @@ size_t Read::nextCigar() {
  * @brief Call this only from Read::nextCigar, sets the CigarLength.
  * 
  */
-void Read::setCigarLength() {
+void Read::setCigarLength()
+{
 	assert(
-			remainingThisCigar == 0
-					&& "setCigarLength called when there was unused cigar left");
+		remainingThisCigar == 0 && "setCigarLength called when there was unused cigar left");
 	remainingThisCigar = 0;
-	while (isdigit(cigar[cigarIndex])) {
+	while (isdigit(cigar[cigarIndex]))
+	{
 		remainingThisCigar *= 10;
 		remainingThisCigar += cigar[cigarIndex] - 48;
 		++cigarIndex;
 	}
-
 }
 
 /**
  * @brief Call this only from Read::nextCigar, sets the CigarType.
  * 
  */
-void Read::setCigarType() {
-	try {
+void Read::setCigarType()
+{
+	try
+	{
 		cigarType = char2cigarState(cigar[cigarIndex]);
-	} catch (const exception &e) {
+	}
+	catch (const exception &e)
+	{
 		std::cerr << e.what() << "from: " << cigar << '\n';
 		cigarType = cigarState::M;
 	}
@@ -219,10 +248,11 @@ void Read::setCigarType() {
  * 
  * @return string 
  */
-string Read::toString() {
+string Read::toString()
+{
 	string ret = "\nRead: ";
 	ret += "\n    qname: " + qname;
-	ret += "\n     flag: " + to_string(flag);
+	ret += "\n     flag: " + toBinary(flag);
 	ret += "\n    rname: " + rname;
 	ret += "\n      pos: " + to_string(pos);
 	ret += "\n     mapq: " + to_string(mapq);
@@ -242,6 +272,7 @@ string Read::toString() {
  * 
  * @param new_pair Pair of this read.
  */
-void Read::setPair(Read *new_pair) {
+void Read::setPair(Read *new_pair)
+{
 	pair = new_pair;
 }
