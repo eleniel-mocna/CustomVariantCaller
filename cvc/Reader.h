@@ -10,6 +10,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <thread>
 #include <mutex>
 
 using namespace std;
@@ -24,11 +25,13 @@ using namespace std;
  */
 class Reader {
 public:
+	void load();
 	Reader(string);
 	~Reader();
 	Read* getPairReads();
 
 private:
+	string file_name;
 	mutex getLock;
 	string getLine();
 	Read* getNewRead();

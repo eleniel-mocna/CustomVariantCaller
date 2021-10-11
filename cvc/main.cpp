@@ -58,8 +58,7 @@ class InputParser{
 void callVariants(string refPath, string samPath, size_t minMapQ, size_t minQual, size_t nThreads, bool vcf) {
     chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 	cerr << "CVC started!\n";
-	ofstream writeFile;
-	Reader* reader = new Reader(samPath);
+    Reader* reader = new Reader(samPath);
 	Reference *refer = new Reference(
 			refPath, minMapQ, minQual);
     vector<thread*> *threads = new vector<thread*>(nThreads);

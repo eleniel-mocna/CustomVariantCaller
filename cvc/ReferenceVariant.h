@@ -25,11 +25,11 @@ struct ReferenceVariant {
 	void addQDP(unsigned int QDP);
 	unsigned int DP;
 	unsigned int QDP;
-	ReferenceVariant(ReadVariant *variant, char referenceBase);
+	ReferenceVariant(ReadVariant *variant, string referenceBases);
 	unsigned int position;
 	string bases;
 	string position_name;
-	char referenceBase;
+	string referenceBases;
 	unsigned int firstCount;
 	unsigned int secondCount;
 	unsigned int pairsCount;

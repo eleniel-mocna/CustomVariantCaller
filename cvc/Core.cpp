@@ -41,8 +41,22 @@ Core::~Core()
  */
 void Core::solveD(Read *read)
 {
-	string location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset);
-	last->next = new ReadVariant(referenceIndex, ".",
+	string location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset - 1);
+	unsigned int oldReferenceIndex = referenceIndex - 1;
+	string deletionString = "";
+	if (readIndex > 0) // This should never happen, because first a match should be found...
+	{				   // But this way it will not crash the program.
+		deletionString.push_back(read->seq[readIndex - 1]);
+	} //deletionString.length()=1
+
+	while (remainingCigar != 1 && referenceIndex < reference->length) //Read all but the last one, next Cigar will be new
+	{
+		remainingCigar = read->nextCigar();
+		deletionString.push_back('\0'); //deletionString.length()++
+		++referenceIndex;
+	}
+
+	last->next = new ReadVariant(oldReferenceIndex, deletionString,
 								 variantType::DELETION, location);
 	last = last->next;
 	++referenceIndex;
@@ -92,6 +106,13 @@ void Core::solveM(Read *read)
 
 	else
 	{
+		if (referenceIndex==1791961907)
+		{
+			cerr << read->toString();
+			cerr << readIndex;
+			cerr << read->seq[readIndex];
+		}
+		
 		last->next = new ReadVariant(referenceIndex,
 									 string(1, read->seq[readIndex]),
 									 variantType::SUBSTITUTION, location);
@@ -304,13 +325,12 @@ void Core::reportReadVariant(Read *first, Read *second, ReadVariant *firstRV,
 		throw invalid_argument("nullptr given as a ReadVariant!");
 	}
 
-	char refBase = reference->ref[firstRV->index];
+	reference->ref[firstRV->index];
 	unsigned long firstHash = Variant2int(firstRV);
 	unsigned long secondHash = Variant2int(secondRV);
 	if (firstHash == secondHash)
 	{
-		reference->reportVariant(firstHash, false, false, true, firstRV,
-								 refBase);
+		reference->reportVariant(firstHash, false, false, true, firstRV);
 	}
 	else
 	{
@@ -329,10 +349,9 @@ void Core::reportReadVariant(Read *first, Read *second, ReadVariant *firstRV,
  */
 void Core::reportFirstReadVariant(Read *first, ReadVariant *firstRV)
 {
-	char refBase = reference->ref[firstRV->index];
 	unsigned long firstHash = Variant2int(firstRV);
 
-	reference->reportVariant(firstHash, true, false, false, firstRV, refBase);
+	reference->reportVariant(firstHash, true, false, false, firstRV);
 }
 
 /**
@@ -348,9 +367,8 @@ void Core::reportFirstReadVariant(Read *first, ReadVariant *firstRV)
  */
 void Core::reportSecondReadVariant(Read *second, ReadVariant *secondRV)
 {
-	char refBase = reference->ref[secondRV->index];
 	unsigned long secondHash = Variant2int(secondRV);
-	reference->reportVariant(secondHash, false, true, false, secondRV, refBase);
+	reference->reportVariant(secondHash, false, true, false, secondRV);
 }
 
 /**

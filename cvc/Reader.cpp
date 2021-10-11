@@ -9,6 +9,8 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <thread>
+#include <mutex>
 #include "Read.h"
 
 using namespace std;
@@ -25,7 +27,14 @@ char HEADER_CHAR = '@';
  * 
  * @todo add a check for file not existing
  */
-Reader::Reader(string file_name) {
+Reader::Reader(string file_name)
+{
+	this->file_name = file_name;
+	load();
+}
+
+void Reader::load()
+{
 	myReadFile.open(file_name);
 	open = true;
 	line_index = 0;
@@ -38,7 +47,8 @@ Reader::Reader(string file_name) {
  * @brief Destroy the Reader object
  * 
  */
-Reader::~Reader() {
+Reader::~Reader()
+{
 	myReadFile.close();
 }
 
@@ -50,20 +60,23 @@ Reader::~Reader() {
  * 
  * @return The next line as a string.
  */
-string Reader::getLine() {
+string Reader::getLine()
+{
 	/* Return the next line or empty string if there are no lines to read.*/
-	if (open) {
+	if (open)
+	{
 		lastLine = currentLine;
-		if (!getline(myReadFile, currentLine)) {
+		if (!getline(myReadFile, currentLine))
+		{
 			open = false;
 		}
-
 		++line_index;
 		return lastLine;
-	} else {
+	}
+	else
+	{
 		return "";
 	}
-
 }
 
 /**
@@ -75,23 +88,27 @@ string Reader::getLine() {
  * 
  * @return New Read or nullptr
  */
-Read* Reader::getNewRead() {
-	if (open) {
+Read *Reader::getNewRead()
+{
+	if (open)
+	{
 		vector<string> splitted = splitString(getLine(), '\t');
 		Read *ret = new Read(splitted[0], stoi(splitted[1]), splitted[2],
-				stoi(splitted[3]), stoi(splitted[4]), splitted[5], splitted[6],
-				stoi(splitted[7]), stoi(splitted[8]), splitted[9],
-				splitted[10]);
-		if (ret->cigar == "*") {
+							 stoi(splitted[3]), stoi(splitted[4]), splitted[5], splitted[6],
+							 stoi(splitted[7]), stoi(splitted[8]), splitted[9],
+							 splitted[10]);
+		if (ret->cigar == "*")
+		{
 			// cerr << "ASTERISK FOUND!\n";
 			delete ret;
 			return getNewRead();
-		} else {
+		}
+		else
+		{
 			return ret;
 		}
 	}
 	return nullptr;
-
 }
 
 /**
@@ -104,14 +121,19 @@ Read* Reader::getNewRead() {
  * @param delimeter Character by which the input string is to be split
  * @return Vector<string> of split strings.
  */
-vector<string> Reader::splitString(string input, char delimeter) {
+vector<string> Reader::splitString(string input, char delimeter)
+{
 	vector<string> ret;
 	string current = "";
-	for (size_t i = 0; i < input.length(); i++) {
-		if (input[i] == delimeter) {
+	for (size_t i = 0; i < input.length(); i++)
+	{
+		if (input[i] == delimeter)
+		{
 			ret.push_back(current);
 			current = "";
-		} else {
+		}
+		else
+		{
 			current.push_back(input[i]);
 		}
 	}
@@ -124,8 +146,10 @@ vector<string> Reader::splitString(string input, char delimeter) {
  * This method should never be called outside of the constructor.
  * 
  */
-void Reader::skipHeader() {
-	do {
+void Reader::skipHeader()
+{
+	do
+	{
 		getline(myReadFile, currentLine);
 	} while (currentLine[0] == HEADER_CHAR);
 }
@@ -140,23 +164,26 @@ void Reader::skipHeader() {
  * 
  * @return Pointer to the first Read in a pair.
  */
-Read* Reader::getPairReads() {
+Read *Reader::getPairReads()
+{
 	getLock.lock();
 	Read *first = nextRead;
 	Read *second = getNewRead();
-	if (first==nullptr || second==nullptr)
+	if (first == nullptr || second == nullptr)
 	{
+		nextRead = getNewRead();
 		getLock.unlock();
 		return first; // If first is nullptr than this return nullptr, which is what we want
 					  // If second is nullptr and first not, we return first, which is what we want
 	}
 	if (first->qname == second->qname) //Next read is this ones pair
-			{
+	{
 		(*first).setPair(second);
 		nextRead = getNewRead();
 		getLock.unlock();
 		return first;
-	} else //We don't have a pair
+	}
+	else //We don't have a pair
 	{
 		nextRead = second;
 		getLock.unlock();

@@ -29,19 +29,25 @@ using namespace std;
  * 
  * @param file Opened file with the reference
  */
-void Reference::setLength(ifstream &file) {
+void Reference::setLength(ifstream &file)
+{
 	length = 1; //indexing is 1-based
 	string line;
 	chromozome_starts = new unordered_map<string, unsigned int>();
-	while (getline(file, line)) {
+	while (getline(file, line))
+	{
 		if (line[0] == '@' || line[0] == ';' || line[0] == '>') //This line is a header or comment
-				{
+		{
 			line.erase(0, 1);
 			cerr << line + ": " + to_string(length - 1) + '\n';
 			(*chromozome_starts)[line] = length - 1;
-		} else {
-			for (char character : line) {
-				if (isalpha(character)) {
+		}
+		else
+		{
+			for (char character : line)
+			{
+				if (isalpha(character))
+				{
 					++length;
 				}
 			}
@@ -60,7 +66,8 @@ void Reference::setLength(ifstream &file) {
  * 
  * @param file 
  */
-void Reference::createArray(ifstream &file) {
+void Reference::createArray(ifstream &file)
+{
 	file.clear();
 	file.seekg(0);
 	ref = *(new vector<char>(length));
@@ -71,23 +78,26 @@ void Reference::createArray(ifstream &file) {
 	while (getline(file, line)) // We need to read this line by line, because of comments
 	{
 		if (line[0] == '@' || line[0] == ';' || line[0] == '>') //This line is a header or comment
+		{
+		}
+		else
+		{
+			for (char &last : line)
+			{
+				if (isalpha(last))
 				{
-		} else {
-			for (char &last : line) {
-				if (isalpha(last)) {
 					ref[i] = toupper(last);
 					++i;
-					if (i % 100000000 == 0) {
+					if (i % 100000000 == 0)
+					{
 						cerr
-								<< "Loaded base " + to_string(i) + "/"
-										+ to_string(length) + "...\n";
+							<< "Loaded base " + to_string(i) + "/" + to_string(length) + "...\n";
 					}
-
 				}
 			}
 		}
 	}
-	assert(length == i && "Input file wasn't read correctly!");	
+	assert(length == i && "Input file wasn't read correctly!");
 }
 
 /**
@@ -97,7 +107,8 @@ void Reference::createArray(ifstream &file) {
  * @param index Which index in said file(=chromozome).
  * @return unsigned int 
  */
-unsigned int Reference::getIndex(string file, unsigned int index) {
+unsigned int Reference::getIndex(string file, unsigned int index)
+{
 	return (*chromozome_starts)[file] + index;
 }
 
@@ -108,12 +119,13 @@ unsigned int Reference::getIndex(string file, unsigned int index) {
  * 
  * @param path 
  */
-Reference::Reference(string path, size_t minMapQ, size_t minQual) {
+Reference::Reference(string path, size_t minMapQ, size_t minQual)
+{
 	this->minMapQ = minMapQ;
 	this->minQual = minQual;
 	cerr << "Loading reference from storage...\n";
 	ifstream file(path);
-	variants = new unordered_map<unsigned long, ReferenceVariant*>;
+	variants = new unordered_map<unsigned long, ReferenceVariant *>;
 	totalDepth = new unordered_map<unsigned int, unsigned int>;
 	qTotalDepth = new unordered_map<unsigned int, unsigned int>;
 	cerr << "Reference loaded!\nSetting length...\n";
@@ -128,7 +140,8 @@ Reference::Reference(string path, size_t minMapQ, size_t minQual) {
  * @brief Destroy the Reference:: Reference object
  * 
  */
-Reference::~Reference() {
+Reference::~Reference()
+{
 	delete &ref;
 }
 
@@ -137,7 +150,8 @@ Reference::~Reference() {
  * 
  * @return unsigned int 
  */
-unsigned int Reference::getLength() {
+unsigned int Reference::getLength()
+{
 	return length;
 }
 
@@ -150,22 +164,46 @@ unsigned int Reference::getLength() {
  * @param pair Is this variant supported by both reads in the pair?
  * @param variant What variant is reported.
  * @param refBase What is the base in this variant's location in the reference.
+ * 
+ * @throws invalid_argument given variant is of unknown type
  */
 void Reference::reportVariant(unsigned long hash, bool first, bool second,
-		bool pair, ReadVariant *variant, char refBase) {
+							  bool pair, ReadVariant *variant)
+{
 	ReferenceVariant *refVar;
+	string refBases = "";
+	switch (variant->type)
+	{
+	case variantType::INSERTION:
+	case variantType::SUBSTITUTION:
+		refBases.push_back(ref[variant->index]);
+		break;
+
+	case variantType::DELETION:
+		for (size_t i = 0; i < variant->bases.length() + 1; i++)
+		{
+			refBases.push_back(ref[variant->index + i]);
+		}
+		break;
+
+	default:
+		cerr << variant->toString();
+		throw invalid_argument("Received variant with unexpected variantType!");
+	}
 	variantLock.lock();
-	if (variants->find(hash) == variants->end()) {
-		refVar = new ReferenceVariant(variant, refBase);
+	if (variants->find(hash) == variants->end())
+	{
+		refVar = new ReferenceVariant(variant, refBases);
 		(*variants)[hash] = refVar;
-	} else {
+	}
+	else
+	{
 		refVar = (*variants)[hash];
 	}
 	refVar->firstCount += first;
 	refVar->secondCount += second;
 	refVar->pairsCount += pair;
 	variantLock.unlock();
-
 }
 
 /**
@@ -174,7 +212,7 @@ void Reference::reportVariant(unsigned long hash, bool first, bool second,
  * @return string 
  */
 
-void Reference::AddToMap(unsigned int index, unordered_map<unsigned int, unsigned int>* map)
+void Reference::AddToMap(unsigned int index, unordered_map<unsigned int, unsigned int> *map)
 {
 	if (map->find(index) == map->end())
 	{
@@ -183,7 +221,7 @@ void Reference::AddToMap(unsigned int index, unordered_map<unsigned int, unsigne
 	else
 	{
 		(*map)[index] += 1;
-	}	
+	}
 }
 
 void Reference::addTotalDepth(unsigned int index)
@@ -191,7 +229,6 @@ void Reference::addTotalDepth(unsigned int index)
 	totalDepthLock.lock();
 	AddToMap(index, totalDepth);
 	totalDepthLock.unlock();
-
 }
 
 void Reference::addQTotalDepth(unsigned int index)
@@ -201,7 +238,7 @@ void Reference::addQTotalDepth(unsigned int index)
 	qTotalDepthLock.unlock();
 }
 
-unsigned int Reference::getFromMap(unsigned int index, unordered_map<unsigned int, unsigned int>* map)
+unsigned int Reference::getFromMap(unsigned int index, unordered_map<unsigned int, unsigned int> *map)
 {
 	if (map->find(index) == map->end())
 	{
@@ -211,7 +248,6 @@ unsigned int Reference::getFromMap(unsigned int index, unordered_map<unsigned in
 	{
 		return (*map)[index];
 	}
-	
 }
 
 unsigned int Reference::getTotalDepth(unsigned int index)

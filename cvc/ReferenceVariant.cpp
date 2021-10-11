@@ -1,5 +1,6 @@
 #include "ReferenceVariant.h"
 #include "ReadVariant.h"
+#include <iostream>
 
 using namespace std;
 
@@ -9,15 +10,21 @@ using namespace std;
  * @param variant What variant should this object represent.
  * @param refBase What is the reference base for this position.
  */
-ReferenceVariant::ReferenceVariant(ReadVariant *variant, char refBase) {
+ReferenceVariant::ReferenceVariant(ReadVariant *variant, string refBases) {
 	position = variant->index;
 	bases = variant->bases;
 	position_name = variant->location;
-	referenceBase = refBase;
+	referenceBases = refBases;
 	firstCount = 0;
 	secondCount = 0;
 	pairsCount = 0;
 	DP=0;
+	if (position_name == "chr10\t111572193")
+	{
+		cerr << toString();
+		cerr << variant->toString();
+		cerr << "/\\ THIS IS A PROBLEM!!!\n";
+	}
 }
 
 /**
@@ -58,7 +65,7 @@ string ReferenceVariant::toString() {
 	ret += '\t';
 	ret += '.'; //ID
 	ret += '\t';
-	ret += referenceBase;
+	ret += referenceBases;
 	ret += '\t';
 	ret += bases;
 	ret += '\t';
@@ -79,10 +86,16 @@ string ReferenceVariant::toString() {
 
 string ReferenceVariant::toTSV()
 {
+	if (bases=="" || bases == "\0")
+	{
+		cerr << toString();
+		cerr << "/\\ THIS IS A PROBLEM!!!\n";
+	}
+	
 	string ret = "";
 	ret += position_name;
 	ret += '\t';
-	ret += referenceBase;
+	ret += referenceBases;
 	ret += '\t';
 	ret += bases;
 	ret += '\t';
