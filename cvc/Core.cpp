@@ -71,7 +71,7 @@ void Core::solveI(Read *read)
 {
 	string location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset - 1);
 	string insertionString = "";
-	if (readIndex > 0) // This should never happen, because first a match should be found...
+	if (readIndex < 0) // This should never happen, because first a match should be found...
 	{				   // But this way it will not crash the program.
 		insertionString.push_back(read->seq[readIndex - 1]);
 	}
@@ -87,7 +87,6 @@ void Core::solveI(Read *read)
 	last->next = new ReadVariant(referenceIndex - 1, insertionString,
 								 variantType::INSERTION, location);
 	last = last->next;
-	++readIndex;
 }
 
 /**
@@ -105,14 +104,7 @@ void Core::solveM(Read *read)
 	}
 
 	else
-	{
-		if (referenceIndex==1791961907)
-		{
-			cerr << read->toString();
-			cerr << readIndex;
-			cerr << read->seq[readIndex];
-		}
-		
+	{		
 		last->next = new ReadVariant(referenceIndex,
 									 string(1, read->seq[readIndex]),
 									 variantType::SUBSTITUTION, location);
