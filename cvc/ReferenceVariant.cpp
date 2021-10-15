@@ -12,19 +12,15 @@ using namespace std;
  */
 ReferenceVariant::ReferenceVariant(ReadVariant *variant, string refBases) {
 	position = variant->index;
-	bases = variant->bases;
+	bases.reserve(variant->bases.length());
+	for(size_t i = 0; i < variant->bases.size(); ++i)
+		if(variant->bases[i] != '\0') bases += variant->bases[i];
 	position_name = variant->location;
 	referenceBases = refBases;
 	firstCount = 0;
 	secondCount = 0;
 	pairsCount = 0;
 	DP=0;
-	if (position_name == "chr10\t111572193")
-	{
-		cerr << toString();
-		cerr << variant->toString();
-		cerr << "/\\ THIS IS A PROBLEM!!!\n";
-	}
 }
 
 /**
@@ -73,9 +69,9 @@ string ReferenceVariant::toString() {
 	ret += '\t';
 	ret += '.'; //Filter TODO
 	ret += '\t';
-	ret += "FC=" + to_string(firstCount);
-	ret += ";SC=" + to_string(secondCount);
-	ret += ";PC=" + to_string(pairsCount);
+	ret += "ADF=" + to_string(firstCount);
+	ret += ";ADR=" + to_string(secondCount);
+	ret += ";ADP=" + to_string(pairsCount);
 	ret += ";DP=" + to_string(DP);
 	ret += ";QDP=" + to_string(QDP);
 	ret += '\t';

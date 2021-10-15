@@ -11,9 +11,15 @@
 class Writer
 {
 private:
+    static const string VCFHeader;
+    static const string TSVHeader;
+    static void VCF(Reference *reference, ostream *file);
+    static void TSV(Reference *reference, ostream *file);
 public:
     Writer();
     ~Writer();
-    void outputVCF(Reference *reference);
-    void outputTSV(Reference *reference);
+    static void outputVCF(Reference *reference);
+    static void outputTSV(Reference *reference);
+    static void fileTSV(Reference *reference, string fileName);
+    static void fileVCF(Reference *reference, string fileName);
 };

@@ -19,32 +19,61 @@ Writer::~Writer()
 {
 }
 
-void Writer::outputVCF(Reference *reference)
-{
-	cout << "##fileformat=VCFv4.3\n"
-			"##INFO=<ID=FC,Number=1,Type=Integer,Description=\"Number of first reads supporting variant\">\n"
-			"##INFO=<ID=SC,Number=1,Type=Integer,Description=\"Number of second reads supporting variant\">\n"
-			"##INFO=<ID=PC,Number=1,Type=Integer,Description=\"Number of whole pairs supporting variant\">\n"
+const string Writer::VCFHeader = "##fileformat=VCFv4.3\n"
+			"##INFO=<ID=ADF,Number=1,Type=Integer,Description=\"Depth of variant-supporting bases on forward strand (reads2plus)\">\n"
+			"##INFO=<ID=ADR,Number=1,Type=Integer,Description=\"Depth of variant-supporting bases on forward strand (reads2minus)\">\n"
+			"##INFO=<ID=ADP,Number=1,Type=Integer,Description=\"Depth of variant-supporting bases on pair reads\">\n"
 			"##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total depth\">\n"
 			"#CHROM POS      ID         REF   ALT    QUAL  FILTER   INFO\n";
-	for (auto varIter = reference->variants->begin(); varIter != reference->variants->end();
-		 varIter++)
-	{
-		ReferenceVariant *var = varIter->second;
-		var->addDP(reference->getTotalDepth(var->position));
-		var->addQDP(reference->getQTotalDepth(var->position));
-		cout << var->toString();
-	}
+const string Writer::TSVHeader = "CHROM\tPOS\tREF\tALT\tADF\tADR\tADP\tDP\tQDP\n";
+
+void Writer::outputVCF(Reference *reference)
+{
+	VCF(reference, &cout);
 }
 void Writer::outputTSV(Reference *reference)
 {
-	cout << "CHROM\tPOS\tREF\tALT\tFC\tSC\tPC\tDP\tQDP\n";
+	TSV(reference, &cout);
+}
+void Writer::fileTSV(Reference *reference, string fileName)
+{
+	ofstream file;
+	file.open(fileName);
+	TSV(reference, &file);
+	file.close();
+}
+
+void Writer::fileVCF(Reference *reference, string fileName)
+{
+	ofstream file;
+	file.open(fileName);
+	VCF(reference, &file);
+	file.close();
+}
+
+void Writer::VCF(Reference *reference, ostream *file)
+{
+	*file << VCFHeader;
 	for (auto varIter = reference->variants->begin(); varIter != reference->variants->end();
 		 varIter++)
 	{
 		ReferenceVariant *var = varIter->second;
 		var->addDP(reference->getTotalDepth(var->position));
 		var->addQDP(reference->getQTotalDepth(var->position));
-		cout << var->toTSV();
+		*file << var->toString();
 	}
 }
+
+void Writer::TSV(Reference *reference, ostream *file)
+{
+	*file << TSVHeader;
+	for (auto varIter = reference->variants->begin(); varIter != reference->variants->end();
+		 varIter++)
+	{
+		ReferenceVariant *var = varIter->second;
+		var->addDP(reference->getTotalDepth(var->position));
+		var->addQDP(reference->getQTotalDepth(var->position));
+		*file << var->toTSV();
+	}
+}
+

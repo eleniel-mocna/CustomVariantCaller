@@ -3,7 +3,6 @@
 # It doesn't have any sanity checks, it is NOT written for long sustinability
 # If it shows that VC works, it might not, if it shows it doesn't work, it still might.
 BEGIN{
-    print("CHROM\tPOS\tREF\tALT\tFC\tSC\tPC\tDP\tQDP")
 }
 
 {

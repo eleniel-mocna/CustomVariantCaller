@@ -71,7 +71,7 @@ void Core::solveI(Read *read)
 {
 	string location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset - 1);
 	string insertionString = "";
-	if (readIndex < 0) // This should never happen, because first a match should be found...
+	if (readIndex > 0) // This should never happen, because first a match should be found...
 	{				   // But this way it will not crash the program.
 		insertionString.push_back(read->seq[readIndex - 1]);
 	}
@@ -104,7 +104,7 @@ void Core::solveM(Read *read)
 	}
 
 	else
-	{		
+	{
 		last->next = new ReadVariant(referenceIndex,
 									 string(1, read->seq[readIndex]),
 									 variantType::SUBSTITUTION, location);
@@ -223,7 +223,8 @@ void Core::solveMapQFail(Read *read)
 bool Core::filter(Read *read)
 {
 	bool ret;
-	ret = (read->mapq >= reference->minMapQ);
+	ret = (read->mapq >= reference->minMapQ &&
+		   read->qual[readIndex] - 33 >= reference->minQual);
 	return ret;
 }
 /**

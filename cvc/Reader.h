@@ -8,6 +8,7 @@
 
 #include "Read.h"
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <vector>
 #include <thread>
@@ -37,7 +38,7 @@ private:
 	Read* getNewRead();
 	void skipHeader();
 	vector<string> splitString(string, char);
-	ifstream myReadFile;
+	istream* myReadFile;
 	string currentLine;
 	string lastLine;
 	Read *nextRead = nullptr;

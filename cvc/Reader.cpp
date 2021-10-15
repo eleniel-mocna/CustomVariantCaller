@@ -23,7 +23,7 @@ char HEADER_CHAR = '@';
  * After this construction the object is ready for use,
  * it has skipped the header and primed the Reader::getLine method
  * 
- * @param file_name path to a SAM file to be read.
+ * @param file_name path to a SAM file to be read or ""/"-" for stdin.
  * 
  * @todo add a check for file not existing
  */
@@ -35,7 +35,14 @@ Reader::Reader(string file_name)
 
 void Reader::load()
 {
-	myReadFile.open(file_name);
+	if (file_name=="" || file_name=="-")
+	{
+		myReadFile = &cin;	
+	}
+	else
+	{
+		myReadFile = new ifstream(file_name);
+	}
 	open = true;
 	line_index = 0;
 	skipHeader();
@@ -49,7 +56,7 @@ void Reader::load()
  */
 Reader::~Reader()
 {
-	myReadFile.close();
+	
 }
 
 /**
@@ -66,7 +73,7 @@ string Reader::getLine()
 	if (open)
 	{
 		lastLine = currentLine;
-		if (!getline(myReadFile, currentLine))
+		if (!getline(*myReadFile, currentLine))
 		{
 			open = false;
 		}
@@ -150,7 +157,7 @@ void Reader::skipHeader()
 {
 	do
 	{
-		getline(myReadFile, currentLine);
+		getline(*myReadFile, currentLine);
 	} while (currentLine[0] == HEADER_CHAR);
 }
 

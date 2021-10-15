@@ -12,7 +12,6 @@
 #include "ReadVariant.h"
 #include "Read.h"
 #include <stdexcept>
-
 using namespace std;
 
 /**
@@ -172,14 +171,14 @@ void Reference::reportVariant(unsigned long hash, bool first, bool second,
 {
 	ReferenceVariant *refVar;
 	string refBases = "";
-	switch (variant->type)
+	switch (variant->type) // TODO: This should be done only if new variant is reported!
 	{
 	case variantType::INSERTION:
 	case variantType::SUBSTITUTION:
 		refBases.push_back(ref[variant->index]);
 		break;
 
-	case variantType::DELETION:
+	case variantType::DELETION: 
 		for (size_t i = 0; i < variant->bases.length() + 1; i++)
 		{
 			refBases.push_back(ref[variant->index + i]);
