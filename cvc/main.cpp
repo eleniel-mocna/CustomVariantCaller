@@ -71,8 +71,8 @@ void callVariants(string refPath,
                   string vcf_file,
                   string tsv_file)
 {
-    cerr << vcf_file + '\n';
-    cerr << tsv_file + '\n';
+    cerr << "VCF: " + vcf_file + '\n';
+    cerr << "TSV: " + tsv_file + '\n';
     chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     cerr << "CVC started!\n";
     Reader *reader = new Reader(samPath);
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
                 "    -h --help			Display this information\n"
                 "    --reference FILE	Path to the reference fasta file (default \"/reference/ucsc.hg19.fasta\")\n"
                 "    --mapq INT         Minimum mapping quality of reads to be considered.\n"
-                "    --baseq INT         Minimum mapping quality of reads to be considered.\n"
+                "    --baseq INT        Minimum mapping quality of reads to be considered.\n"
                 "    --threads INT      Number of threads to run with. (Disabled)\n"
                 "    --vcf              The stdout should be formated as vcf, false for tsv [true].\n"
                 "    --vcf-file FILE    Output vcf formatted to FILE.\n"

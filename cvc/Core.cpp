@@ -343,9 +343,14 @@ void Core::reportReadVariant(Read *first, Read *second, ReadVariant *firstRV,
 void Core::reportFirstReadVariant(Read *first, ReadVariant *firstRV)
 {
 	unsigned long firstHash = Variant2int(firstRV);
-
+	
+	if (first->flag & 0b000010000000) // This is a reverse read without a mate.
+	{
+		reportSecondReadVariant(first, firstRV);
+		return;
+	}
 	reference->reportVariant(firstHash, true, false, false, firstRV);
-}
+}	
 
 /**
  * @brief Report variant from the second read in pair.
@@ -362,6 +367,23 @@ void Core::reportSecondReadVariant(Read *second, ReadVariant *secondRV)
 {
 	unsigned long secondHash = Variant2int(secondRV);
 	reference->reportVariant(secondHash, false, true, false, secondRV);
+}
+void Core::reportSingleReadVariant(Read *read, ReadVariant *variant)
+{
+	if (read->flag & 0b000010000000) // This is a reverse read
+	{
+		reportSecondReadVariant(read, variant);		
+	}
+	else if (read->flag & 0b000001000000) // This is a forward read
+	{
+		reportFirstReadVariant(read,variant);
+	}
+	else
+	{
+		cerr << read->toString();
+		cerr << variant->toString();
+		throw invalid_argument("Reported variant with a wrong flag!");
+	}
 }
 
 /**

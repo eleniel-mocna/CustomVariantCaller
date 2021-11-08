@@ -104,8 +104,9 @@ Read *Reader::getNewRead()
 							 stoi(splitted[3]), stoi(splitted[4]), splitted[5], splitted[6],
 							 stoi(splitted[7]), stoi(splitted[8]), splitted[9],
 							 splitted[10]);
-		if (ret->cigar == "*")
+		if (ret->cigar == "*" || ret->flag&2048) // There is no cigar or this is an alternate mapping
 		{
+			// if (ret->flag&256) {cerr << ret->toString() << ++dsa;}
 			// cerr << "ASTERISK FOUND!\n";
 			delete ret;
 			return getNewRead();
@@ -188,6 +189,21 @@ Read *Reader::getPairReads()
 		(*first).setPair(second);
 		nextRead = getNewRead();
 		getLock.unlock();
+		if (!(first->flag&64) || !(first->pair->flag&128))
+		{
+			if ((first->flag&128) && (first->pair->flag&64))
+			{
+				first->pair->setPair(first);
+				first = first->pair;
+				first->pair->setPair(nullptr);
+			}
+			else
+			{
+				cerr << first->toString();
+				cerr << first->pair->toString();
+				cerr << "###########" << ++dsa;	
+			}			
+		}
 		return first;
 	}
 	else //We don't have a pair

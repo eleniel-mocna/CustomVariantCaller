@@ -30,6 +30,7 @@ private:
 	void reportReadVariant(Read *first, Read *second, ReadVariant *firstRV,
 						   ReadVariant *secondRV);
 
+	void reportSingleReadVariant(Read *read, ReadVariant *variant);
 	void reportFirstReadVariant(Read *first, ReadVariant *firstRV);
 
 	void reportSecondReadVariant(Read *second, ReadVariant *secondRV);

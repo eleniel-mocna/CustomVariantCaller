@@ -12,22 +12,22 @@ BEGIN{
     }
     else 
     {
-        printf $1
+        printf $1 #Chr name
         printf "\t"
-        printf $2
+        printf $2 #chr pos
         printf "\t"
-        printf $4
+        printf $4 # ref bases
         printf "\t"
-        printf $5
+        printf $5 # variant bases
         printf "\t"
         split($10   , INFO, ":")
-        printf INFO[13]
+        printf INFO[13] # forward strand depth of supporting variant
         printf "\t"
-        printf INFO[14]
+        printf INFO[14] # reverse strand depth of supporting variant
         printf "\t"
-        printf "."
+        printf "." # pairs supporting variants
         printf "\t"
-        printf INFO[3]
+        printf INFO[3] # 
         printf "\t"
         printf INFO[4]
         printf "\n"

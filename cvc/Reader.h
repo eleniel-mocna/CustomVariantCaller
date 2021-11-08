@@ -32,6 +32,7 @@ public:
 	Read* getPairReads();
 
 private:
+	int dsa = 0;
 	string file_name;
 	mutex getLock;
 	string getLine();
