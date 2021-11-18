@@ -1,4 +1,7 @@
 #!/bin/bash
+set -euo pipefail # This is here so we don't fail on "folder exists error"
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
 log () 
 {
     log_string="[CVC $(date +%H:%M.%S)] $1"
@@ -91,9 +94,6 @@ while [[ $# -gt 0 ]]; do
 done
 
 mkdir "$name"
-
-set -euo pipefail # This is here so we don't fail on "folder exists error"
-set -- "${POSITIONAL[@]}" # restore positional parameters
 
 bam_file="$name/$name.bam"
 log_file="$name/$name.log"

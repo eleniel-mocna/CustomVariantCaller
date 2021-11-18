@@ -1,7 +1,7 @@
 FROM rocker/rstudio
 LABEL NAME="cvc" Version="1.0"
 LABEL author="Samuel Soukup"
-LABEL contact="soukup.sam@gmail.com"
+LABEL contact="soukup.sam(at)gmail.com"
 
 RUN mkdir cvc
 COPY Makefile cvc/Makefile

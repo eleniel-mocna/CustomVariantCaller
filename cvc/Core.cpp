@@ -98,17 +98,20 @@ void Core::solveM(Read *read)
 {
 	string location = read->rname + '\t' + to_string(read->pos + referenceIndex - referenceOffset);
 	reference->addTotalDepth(referenceIndex);
-	reference->addQTotalDepth(referenceIndex);
-	if (reference->ref[referenceIndex] == read->seq[readIndex])
+	if (baseQFilter(read))
 	{
-	}
+		reference->addQTotalDepth(referenceIndex);
+		if (reference->ref[referenceIndex] == read->seq[readIndex])
+		{
+		}
 
-	else
-	{
-		last->next = new ReadVariant(referenceIndex,
-									 string(1, read->seq[readIndex]),
-									 variantType::SUBSTITUTION, location);
-		last = last->next;
+		else
+		{
+			last->next = new ReadVariant(referenceIndex,
+										string(1, read->seq[readIndex]),
+										variantType::SUBSTITUTION, location);
+			last = last->next;
+		}
 	}
 
 	++readIndex;
@@ -126,7 +129,7 @@ void Core::solveMapQPass(Read *read)
 	{ // This will stop when there is no more cigar string to read
 		// i.e. no more read sequence.
 
-		if (char2Fred(read->qual[readIndex]) >= reference->minQual)
+		if (mapQFilter(read))
 		{
 			switch (read->cigarType)
 			{
@@ -214,19 +217,29 @@ void Core::solveMapQFail(Read *read)
 }
 
 /**
- * @brief Figure out if this read passes all filters.
+ * @brief Figure out if this read passes the mapQ filter.
  * 
  * @param read to be filtered.
  * @return true: Read passes all filters.
  * @return false: Read failed some filters.
  */
-bool Core::filter(Read *read)
-{
-	bool ret;
-	ret = (read->mapq >= reference->minMapQ &&
-		   read->qual[readIndex] - 33 >= reference->minQual);
-	return ret;
+bool Core::mapQFilter(Read *read)
+{	
+	return (read->mapq >= reference->minMapQ);
 }
+
+/**
+ * @brief Figure out, if this read passes the base quality filter for current base.
+ * 
+ * @param read 
+ * @return true 
+ * @return false 
+ */
+bool Core::baseQFilter(Read *read)
+{
+	return (char2Fred(read->qual[readIndex]) >= reference->minQual);	
+}
+
 /**
  * @brief Find all variants in given Read.
  * 
@@ -260,7 +273,7 @@ ReadVariant *Core::analyzeRead(Read *read)
 	string insertionString; // Needed for solving insertions
 	readIndex = 0;
 	remainingCigar = read->nextCigar();
-	if (filter(read))
+	if (mapQFilter(read))
 	{
 		solveMapQPass(read);
 	}

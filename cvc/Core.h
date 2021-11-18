@@ -61,7 +61,9 @@ private:
 
 	void solveMapQFail(Read *read);
 
-	bool filter(Read *read);
+	bool mapQFilter(Read *read);
+
+	bool baseQFilter(Read *read);
 
 public:
 	Core(Reference *ref, Reader *reader);

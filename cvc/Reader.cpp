@@ -46,7 +46,6 @@ void Reader::load()
 	open = true;
 	line_index = 0;
 	skipHeader();
-	getLine();
 	nextRead = getNewRead();
 }
 
@@ -106,13 +105,17 @@ Read *Reader::getNewRead()
 							 splitted[10]);
 		if (ret->cigar == "*" || ret->flag&2048) // There is no cigar or this is an alternate mapping
 		{
-			// if (ret->flag&256) {cerr << ret->toString() << ++dsa;}
 			// cerr << "ASTERISK FOUND!\n";
 			delete ret;
 			return getNewRead();
 		}
 		else
 		{
+			if (ret->flag>=2048)
+			{
+				throw new exception();
+			}
+			
 			return ret;
 		}
 	}
@@ -177,6 +180,8 @@ Read *Reader::getPairReads()
 	getLock.lock();
 	Read *first = nextRead;
 	Read *second = getNewRead();
+
+	
 	if (first == nullptr || second == nullptr)
 	{
 		nextRead = getNewRead();
@@ -189,7 +194,7 @@ Read *Reader::getPairReads()
 		(*first).setPair(second);
 		nextRead = getNewRead();
 		getLock.unlock();
-		if (!(first->flag&64) || !(first->pair->flag&128))
+		if (!(first->flag&64) || !(first->pair->flag&128)) //TODO
 		{
 			if ((first->flag&128) && (first->pair->flag&64))
 			{
