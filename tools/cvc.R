@@ -1,10 +1,10 @@
-# reads1/2 -> path to fastq files for variant calling
-# NAME -> path to folder in which these should be stored
-# reference -> path to reference
-# mapQ -> minimal reads mapping quality to be considered
-# baseQ -> minimal base quality to be considered
-# no_vcf -> don't bother outputting the vcf file
-# no_tsv -> don't bother outputting the tsv file
+# reads1/2 -> path to the fastq files for variant calling
+# NAME -> path to the folder in which the results should be stored ["CVC<date>-<time>"]
+# reference -> path to reference ["/reference/ucsc.hg19.fasta"]
+# mapQ -> minimal reads mapping quality to be considered [0]
+# baseQ -> minimal base quality to be considered [13]
+# no_vcf -> don't bother outputting the vcf file [False]
+# no_tsv -> don't bother outputting the tsv file [False]
 
 cvc <- function(reads1,
                 reads2,
