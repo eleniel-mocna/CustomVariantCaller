@@ -62,3 +62,18 @@ Optional columns are:
 - `"MapQ"`-> equivalent of `mapQ` in the aforementioned function`cvc`
 - `"BaseQ"`-> equivalent of `baseQ` in the aforementioned function `cvc`
 - `"Reference"`-> equivalent of `reference` in the aforementioned function `cvc`
+
+## Detailed functionality description
+
+In the core of this utility is a variant caller, which works takes following steps:
+
+- Read given sam file line by line,
+- Filter out all reads that:
+  - have empty CIGAR string or,
+  - have flag 2048 (supplementary alignment) set;
+- If two following lines have the same QNAME handle them as pairs, else handle them as reads without a pair,
+- Find variants in every pair/read and increment counters for every position,
+- If mapQ of a read is lower than filter level, for this read, increment only counters that don't pass quality checks,
+- If baseQ for a base in a read is lower than filter level, for this position in this read, increment only counters that don't pass quality checks,
+- Print out all found variants,
+- Hopefully don't crash catastrofically in the process :-).
