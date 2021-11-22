@@ -14,8 +14,8 @@ print_help()
 }
 
 #https://stackoverflow.com/a/14203146
-if [[ $# -lt 4]]; then
-    print_help()
+if [[ $# -lt 4 ]]; then
+    print_help
 fi
 
 while [[ $# -gt 0 ]]; do
@@ -23,7 +23,7 @@ while [[ $# -gt 0 ]]; do
 
   case $key in
     -h|--help)
-            print_help()
+            print_help
         ;;    
     *)   
       POSITIONAL+=("$1")
@@ -37,4 +37,4 @@ name=$2
 mount=$3
 password=$4
 
-docker run -e PASSWORD=pass -p $port:8787 -d -v $mount:/home/rstudio/data --name $name cvc_eleniel
+docker run -e PASSWORD=pass -p $port:8787 -d --cpus=20 -m=200g -v $mount:/home/rstudio/data --name $name cvc_eleniel
