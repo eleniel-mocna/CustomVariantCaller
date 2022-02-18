@@ -167,7 +167,7 @@ unsigned int Reference::getLength()
  * @throws invalid_argument given variant is of unknown type
  */
 void Reference::reportVariant(unsigned long hash, bool first, bool second,
-							  bool pair, ReadVariant *variant)
+							  bool pair, ReadVariant *variant, bool paired)
 {
 	ReferenceVariant *refVar;
 	string refBases = "";
@@ -199,8 +199,10 @@ void Reference::reportVariant(unsigned long hash, bool first, bool second,
 	{
 		refVar = (*variants)[hash];
 	}
-	refVar->firstCount += first;
-	refVar->secondCount += second;
+	refVar->firstCountPairUnspanned += (first && !paired);
+	refVar->firstCountPairSpanned += (first && paired);
+	refVar->secondCountPairUnspanned += (second && !paired);
+	refVar->secondCountPairSpanned += (second && paired);
 	refVar->pairsCount += pair;
 	variantLock.unlock();
 }

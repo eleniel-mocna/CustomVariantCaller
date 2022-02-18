@@ -30,7 +30,9 @@ struct ReferenceVariant {
 	string bases;
 	string position_name;
 	string referenceBases;
-	unsigned int firstCount;
-	unsigned int secondCount;
+	unsigned int firstCountPairUnspanned;
+	unsigned int firstCountPairSpanned;
+	unsigned int secondCountPairUnspanned;
+	unsigned int secondCountPairSpanned;
 	unsigned int pairsCount;
 };

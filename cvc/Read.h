@@ -62,12 +62,14 @@ private:
 
 public:
 	~Read();
-	Read(string, size_t, string, unsigned int, size_t, string, string,
-			unsigned int, int, string, string);
+	Read(string qname, size_t flag, string rname, unsigned int pos,
+		   size_t mapq, string cigar, string rnext, unsigned int pnext, int tlen,
+		   string seq, string qual);
 	void setPair(Read*);
 	size_t nextCigar();
 	string toString();
 	cigarState cigarType;
+	bool spansPosition(unsigned int index);
 	/// Query template NAME
 	///
 	string qname;
@@ -105,7 +107,10 @@ public:
 	///
 	Read *pair;
 	/// Linked list of all variants of this Read.
-	///
+	///	
 	ReadVariant* variants;
+	/// Begin index in respect to the reference
+	///
+	unsigned int referenceIndexPos=0;
 };
 

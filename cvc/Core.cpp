@@ -330,18 +330,19 @@ void Core::reportReadVariant(Read *first, Read *second, ReadVariant *firstRV,
 	{
 		throw invalid_argument("nullptr given as a ReadVariant!");
 	}
+	bool paired = true;
 
 	reference->ref[firstRV->index];
 	unsigned long firstHash = Variant2int(firstRV);
 	unsigned long secondHash = Variant2int(secondRV);
 	if (firstHash == secondHash)
 	{
-		reference->reportVariant(firstHash, false, false, true, firstRV);
+		reference->reportVariant(firstHash, false, false, true, firstRV, paired);
 	}
 	else
 	{
-		reportFirstReadVariant(first, firstRV);
-		reportSecondReadVariant(second, secondRV);
+		reportFirstReadVariant(first, firstRV, paired);
+		reportSecondReadVariant(second, secondRV, paired);
 	}
 }
 
@@ -353,16 +354,16 @@ void Core::reportReadVariant(Read *first, Read *second, ReadVariant *firstRV,
  * @param first Read to which the variant is associated. 
  * @param firstRV ReadVariant to be reported. 
  */
-void Core::reportFirstReadVariant(Read *first, ReadVariant *firstRV)
+void Core::reportFirstReadVariant(Read *first, ReadVariant *firstRV, bool paired)
 {
 	unsigned long firstHash = Variant2int(firstRV);
 	
 	if (first->flag & 0b000010000000) // This is a reverse read without a mate.
 	{
-		reportSecondReadVariant(first, firstRV);
+		reportSecondReadVariant(first, firstRV, false);
 		return;
 	}
-	reference->reportVariant(firstHash, true, false, false, firstRV);
+	reference->reportVariant(firstHash, true, false, false, firstRV, paired);
 }	
 
 /**
@@ -376,20 +377,20 @@ void Core::reportFirstReadVariant(Read *first, ReadVariant *firstRV)
  * @todo This is almost a duplicate method of Core::reportFirstReadVariant,
  * they could very well be written into just one method.
  */
-void Core::reportSecondReadVariant(Read *second, ReadVariant *secondRV)
+void Core::reportSecondReadVariant(Read *second, ReadVariant *secondRV, bool paired)
 {
 	unsigned long secondHash = Variant2int(secondRV);
-	reference->reportVariant(secondHash, false, true, false, secondRV);
+	reference->reportVariant(secondHash, false, true, false, secondRV, paired);
 }
-void Core::reportSingleReadVariant(Read *read, ReadVariant *variant)
+void Core::reportSingleReadVariant(Read *read, ReadVariant *variant, bool paired)
 {
 	if (read->flag & 0b000010000000) // This is a reverse read
 	{
-		reportSecondReadVariant(read, variant);		
+		reportSecondReadVariant(read, variant, paired);		
 	}
 	else if (read->flag & 0b000001000000) // This is a forward read
 	{
-		reportFirstReadVariant(read,variant);
+		reportFirstReadVariant(read,variant, paired);
 	}
 	else
 	{
@@ -440,7 +441,7 @@ void Core::analyzeReads(Read *first)
 		cerr << first->toString();
 		cerr << second->toString();
 	}
-
+	setReadIndices(first, second);
 	ReadVariant *firstVariant = analyzeRead(first);
 	ReadVariant *secondVariant = analyzeRead(second);
 	ReadVariant *oldFirstVariant;
@@ -461,26 +462,29 @@ void Core::analyzeReads(Read *first)
 		{
 			oldFirstVariant = firstVariant;
 			firstVariant = firstVariant->next;
-			reportFirstReadVariant(first, oldFirstVariant);
+			reportFirstReadVariant(first, oldFirstVariant, second->spansPosition(oldFirstVariant->index));
 		}
 		else
 		{
 			oldSecondVariant = secondVariant;
 			secondVariant = secondVariant->next;
-			reportSecondReadVariant(second, oldSecondVariant);
+			reportSecondReadVariant(second, oldSecondVariant, first->spansPosition(oldSecondVariant->index));
 		}
 	}
+	bool spanned;
 	while (firstVariant != nullptr)
 	{
+		spanned = second!=nullptr && second->spansPosition(oldFirstVariant->index);
 		oldFirstVariant = firstVariant;
 		firstVariant = firstVariant->next;
-		reportFirstReadVariant(first, oldFirstVariant);
+		reportFirstReadVariant(first, oldFirstVariant, spanned);
 	}
 	while (secondVariant != nullptr)
 	{
+		spanned = first!=nullptr && first->spansPosition(oldSecondVariant->index);
 		oldSecondVariant = secondVariant;
 		secondVariant = secondVariant->next;
-		reportSecondReadVariant(second, oldSecondVariant);
+		reportSecondReadVariant(second, oldSecondVariant, spanned);
 	}
 	delete first; //This will automatically delete also second
 };
@@ -499,4 +503,23 @@ void Core::doAnalysis()
 void Core::operator()()
 {
 	doAnalysis();
+}
+
+/**
+ * @brief Set the begin indices for both reads
+ * 
+ * @param first read
+ * @param second read
+ */
+void Core::setReadIndices(Read *first, Read *second){
+
+	
+	if (first!=nullptr)
+	{
+		first->referenceIndexPos=reference->getIndex(first->rname, first->pos);
+	}
+	if (second!=nullptr)
+	{
+		second->referenceIndexPos=reference->getIndex(second->rname, second->pos);
+	}
 }

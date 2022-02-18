@@ -27,13 +27,14 @@ class Core
 private:
 	Reader *reader;
 	Reference *reference;
+	void setReadIndices(Read *first, Read *second);
 	void reportReadVariant(Read *first, Read *second, ReadVariant *firstRV,
 						   ReadVariant *secondRV);
 
-	void reportSingleReadVariant(Read *read, ReadVariant *variant);
-	void reportFirstReadVariant(Read *first, ReadVariant *firstRV);
+	void reportSingleReadVariant(Read *read, ReadVariant *variant, bool paired);
+	void reportFirstReadVariant(Read *first, ReadVariant *firstRV, bool paired);
 
-	void reportSecondReadVariant(Read *second, ReadVariant *secondRV);
+	void reportSecondReadVariant(Read *second, ReadVariant *secondRV, bool paired);
 
 	unsigned long Variant2int(ReadVariant *variant);
 

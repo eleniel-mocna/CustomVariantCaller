@@ -17,8 +17,10 @@ ReferenceVariant::ReferenceVariant(ReadVariant *variant, string refBases) {
 		if(variant->bases[i] != '\0') bases += variant->bases[i];
 	position_name = variant->location;
 	referenceBases = refBases;
-	firstCount = 0;
-	secondCount = 0;
+	firstCountPairUnspanned = 0;
+	firstCountPairSpanned = 0;
+	secondCountPairUnspanned = 0;
+	secondCountPairSpanned = 0;
 	pairsCount = 0;
 	DP=0;
 }
@@ -69,9 +71,10 @@ string ReferenceVariant::toString() {
 	ret += '\t';
 	ret += '.'; //Filter TODO
 	ret += '\t';
-	ret += "ADF=" + to_string(firstCount);
-	ret += ";ADR=" + to_string(secondCount);
-	ret += ";ADP=" + to_string(pairsCount);
+	ret += "ADFP=" + to_string(firstCountPairSpanned);
+	ret += ";ADFU=" + to_string(firstCountPairUnspanned);
+	ret += ";ADRP=" + to_string(secondCountPairSpanned);
+	ret += ";ADRU=" + to_string(secondCountPairUnspanned);
 	ret += ";DP=" + to_string(DP);
 	ret += ";QDP=" + to_string(QDP);
 	ret += '\t';
@@ -82,12 +85,6 @@ string ReferenceVariant::toString() {
 
 string ReferenceVariant::toTSV()
 {
-	if (bases=="" || bases == "\0")
-	{
-		cerr << toString();
-		cerr << "/\\ THIS IS A PROBLEM!!!\n";
-	}
-	
 	string ret = "";
 	ret += position_name;
 	ret += '\t';
@@ -95,8 +92,10 @@ string ReferenceVariant::toTSV()
 	ret += '\t';
 	ret += bases;
 	ret += '\t';
-	ret += to_string(firstCount) + '\t';
-	ret += to_string(secondCount) + '\t';
+	ret += to_string(firstCountPairSpanned) + '\t';
+	ret += to_string(firstCountPairUnspanned) + '\t';
+	ret += to_string(secondCountPairSpanned) + '\t';
+	ret += to_string(secondCountPairUnspanned) + '\t';
 	ret += to_string(pairsCount) + '\t';
 	ret += to_string(DP) + '\t';
 	ret += to_string(QDP) + '\t';

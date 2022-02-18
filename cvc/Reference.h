@@ -37,7 +37,7 @@ public:
 	void addQTotalDepth(unsigned int index);
 	unsigned int getIndex(string file_name, unsigned int index);
 	void reportVariant(unsigned long hash, bool first, bool second, bool pair,
-			ReadVariant *variant);
+			ReadVariant *variant, bool paired);
 	string outputVariants();
 	unsigned int length;
 	size_t minMapQ;

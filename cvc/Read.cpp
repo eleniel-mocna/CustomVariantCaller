@@ -276,3 +276,17 @@ void Read::setPair(Read *new_pair)
 {
 	pair = new_pair;
 }
+/**
+ * @brief Does this read span given Reference index?
+ * 
+ * @param index Index in the reference
+ * @return true 
+ * @return false 
+ */
+bool Read::spansPosition(unsigned int index){
+	if (referenceIndexPos==0)
+	{
+		throw invalid_argument("Read reference index not set!");
+	}
+	return index >= referenceIndexPos && index < referenceIndexPos+tlen;
+}

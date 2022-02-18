@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Read.h"
+#include "Reference.h"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -27,13 +28,13 @@ using namespace std;
 class Reader {
 public:
 	void load();
-	Reader(string);
+	Reader(string fileName);
 	~Reader();
 	Read* getPairReads();
 
 private:
 	int dsa = 0;
-	string file_name;
+	string fileName;
 	mutex getLock;
 	string getLine();
 	Read* getNewRead();

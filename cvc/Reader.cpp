@@ -12,6 +12,7 @@
 #include <thread>
 #include <mutex>
 #include "Read.h"
+#include "Reference.h"
 
 using namespace std;
 
@@ -23,25 +24,25 @@ char HEADER_CHAR = '@';
  * After this construction the object is ready for use,
  * it has skipped the header and primed the Reader::getLine method
  * 
- * @param file_name path to a SAM file to be read or ""/"-" for stdin.
+ * @param fileName path to a SAM file to be read or ""/"-" for stdin.
  * 
  * @todo add a check for file not existing
  */
-Reader::Reader(string file_name)
+Reader::Reader(string fileName)
 {
-	this->file_name = file_name;
+	this->fileName = fileName;
 	load();
 }
 
 void Reader::load()
 {
-	if (file_name=="" || file_name=="-")
+	if (fileName=="" || fileName=="-")
 	{
 		myReadFile = &cin;	
 	}
 	else
 	{
-		myReadFile = new ifstream(file_name);
+		myReadFile = new ifstream(fileName);
 	}
 	open = true;
 	line_index = 0;
@@ -204,9 +205,9 @@ Read *Reader::getPairReads()
 			}
 			else
 			{
+				cerr << "Unregular reads detected:";
 				cerr << first->toString();
 				cerr << first->pair->toString();
-				cerr << "###########" << ++dsa;	
 			}			
 		}
 		return first;

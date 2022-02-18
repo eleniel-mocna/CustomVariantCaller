@@ -75,9 +75,9 @@ void callVariants(string refPath,
     cerr << "TSV: " + tsv_file + '\n';
     chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     cerr << "CVC started!\n";
-    Reader *reader = new Reader(samPath);
     Reference *refer = new Reference(
         refPath, minMapQ, minBaseQ);
+    Reader *reader = new Reader(samPath);
     vector<thread *> *threads = new vector<thread *>(nThreads);
     chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     cerr << "Reference built after " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
