@@ -77,3 +77,16 @@ In the core of this utility is a variant caller, which works takes following ste
 - If baseQ for a base in a read is lower than filter level, for this position in this read, increment only counters that don't pass quality checks,
 - Print out all found variants,
 - Hopefully don't crash catastrofically in the process :-).
+
+## Output abbreviations meanings
+
+- ADFP (**A**lternate alleles **D**epth on **F**orward strand, **P**air spans this position):
+ Depth of variant-supporting bases on forward strand (reads2plus), where the pair read spans this position and doesn't report it.
+- ADFU (**A**lternate alleles **D**epth on **F**orward strand, pair does **N**ot span this position):
+ Depth of variant-supporting bases on forward strand (reads2plus), where the pair read does not span this position.
+- ADRP (**A**lternate alleles **D**epth on **R**everse strand, **P**air spans this position):
+ Depth of variant-supporting bases on reverse strand (reads2minus), where the pair read spans this position and doesn't report it.
+- ADRU (**A**lternate alleles **D**epth on **R**everse strand, pair does **N**ot span this position):
+ Depth of variant-supporting bases on reverse strand (reads2minus), where the pair read does not span this position.
+- ADP: Depth of variant-supporting bases on both reads in the pair.
+- DP: Total depth
