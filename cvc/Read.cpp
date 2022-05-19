@@ -29,9 +29,9 @@ string toBinary(size_t n)
 
 /**
  * @brief Convert char into a cigarState enum.
- * 
+ *
  * @param inp Char to be converted
- * 
+ *
  * @throws invalid_argument When CigarString that is not supported is given (implementation error)
  * @return Resulting cigarState
  */
@@ -82,7 +82,7 @@ cigarState char2cigarState(char inp)
 
 /**
  * @brief Convert cigarState to a char.
- * 
+ *
  * @param inp cigarState to be converted.
  * @return Converted char.
  */
@@ -125,10 +125,10 @@ char cigarState2char(cigarState inp)
 
 /**
  * @brief Construct a new Read object.
- * 
+ *
  * As this class is mainly for holding data about one read, this constructor
  * takes all information from the sam file and saves it.
- * 
+ *
  * @param qname Query template NAME
  * @param flag bitwise FLAG
  * @param rname References sequence NAME
@@ -139,7 +139,7 @@ char cigarState2char(cigarState inp)
  * @param pnext Position of the mate/next read
  * @param tlen observed Template LENgth
  * @param seq segment SEQuence
- * @param qual ASCII of Phred-scaled base QUALity+33 
+ * @param qual ASCII of Phred-scaled base QUALity+33
  */
 Read::Read(string qname, size_t flag, string rname, unsigned int pos,
 		   size_t mapq, string cigar, string rnext, unsigned int pnext, int tlen,
@@ -165,9 +165,9 @@ Read::Read(string qname, size_t flag, string rname, unsigned int pos,
 
 /**
  * @brief Destroy the Read object, its pair and their variants.
- * 
+ *
  * This destructor is called in Core::analyzeReads, where this class' lifecycle
- * ends. 
+ * ends.
  */
 Read::~Read()
 {
@@ -177,11 +177,11 @@ Read::~Read()
 
 /**
  * @brief Move CigarState one base forward.
- * 
+ *
  * This method shall be called every time before extracting the next base
  * in the sequence. After this call this->cigarType will correspond to
  * the next base's cigar type.
- * 
+ *
  * @return How many more bases will have the same cigar as the next one.
  */
 size_t Read::nextCigar()
@@ -209,7 +209,7 @@ size_t Read::nextCigar()
 
 /**
  * @brief Call this only from Read::nextCigar, sets the CigarLength.
- * 
+ *
  */
 void Read::setCigarLength()
 {
@@ -226,7 +226,7 @@ void Read::setCigarLength()
 
 /**
  * @brief Call this only from Read::nextCigar, sets the CigarType.
- * 
+ *
  */
 void Read::setCigarType()
 {
@@ -245,8 +245,8 @@ void Read::setCigarType()
 
 /**
  * @brief Return nice representation of this Read.
- * 
- * @return string 
+ *
+ * @return string
  */
 string Read::toString()
 {
@@ -269,7 +269,7 @@ string Read::toString()
 
 /**
  * @brief Set given argument as the pair of this read.
- * 
+ *
  * @param new_pair Pair of this read.
  */
 void Read::setPair(Read *new_pair)
@@ -278,15 +278,107 @@ void Read::setPair(Read *new_pair)
 }
 /**
  * @brief Does this read span given Reference index?
- * 
+ *
  * @param index Index in the reference
- * @return true 
- * @return false 
+ * @return true
+ * @return false
  */
-bool Read::spansPosition(unsigned int index){
-	if (referenceIndexPos==0)
+bool Read::spansPosition(unsigned int index, size_t minBaseQ)
+{
+	if (!mapQPass ||
+		(baseQAtIndex(referenceIndexFromBegin(index)) < minBaseQ))
+	{
+		return false;
+	}
+	if (referenceIndexPos == 0)
 	{
 		throw invalid_argument("Read reference index not set!");
 	}
-	return index >= referenceIndexPos && index < referenceIndexPos+tlen;
+	return index >= referenceIndexPos && index < referenceIndexPos + tlen;
+}
+
+/**
+ * @brief Set that this read passes the mapQ filter
+ *
+ */
+void Read::passesMapQ()
+{
+	mapQPass = true;
+}
+
+/**
+ * @brief Return number of reference bases from begin of this read
+ *
+ * @param referenceIndex the reference index we want to match
+ * @return size_t the number of bases from begin
+ */
+size_t Read::referenceIndexFromBegin(unsigned int referenceIndex)
+{
+	size_t ret = referenceIndex - this->referenceIndexPos;
+	if (ret > tlen)
+	{
+		throw invalid_argument("Reference index out of range!");
+	}
+	return ret;
+}
+
+/**
+ * @brief Base quality at `indexFromBegin`-th reference base from begin
+ * of this read.
+ *
+ * @param indexFromBegin Number of reference bases from the beginning of this
+ * 	read.
+ * @return size_t The base quality.
+ */
+size_t Read::baseQAtIndex(size_t indexFromBegin)
+{
+	size_t subtraction = 0;
+	string numberBuffer = "";
+	char cigarType = '.';
+	for (auto &&character : cigar)
+	{
+		if (isdigit(character))
+		{
+			numberBuffer = numberBuffer + character;
+		}
+		else
+		{
+			cigarType = character;
+			switch (cigarType)
+			{
+			case 'M':
+			case '=':
+			case 'X':
+			case 'D':
+			case 'N':
+				if (indexFromBegin + stoi(numberBuffer) - subtraction < indexFromBegin)
+				{
+				}
+				else
+				{
+					return char2Fred(cigar[indexFromBegin - subtraction]);
+				}
+				break;
+			case '.':
+				throw invalid_argument("Unexpected CIGAR string!");
+				break;
+			default:
+				subtraction = subtraction + stoi(numberBuffer);
+				break;
+			}
+			numberBuffer = "";
+		}
+	}
+	throw invalid_argument("Given index overran the Cigar string @ BaseQAtIndex!");
+}
+
+/**
+ * @brief Converts base quality from char to size_t
+ *
+ * @param char to be evaluated
+ * @return size_t
+ */
+size_t Read::char2Fred(char inp)
+{
+	return int(inp) - 33;
 }

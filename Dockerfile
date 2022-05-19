@@ -1,5 +1,5 @@
 FROM rocker/rstudio
-LABEL NAME="cvc" Version="1.0"
+LABEL NAME="cvc" Version="1.1"
 LABEL author="Samuel Soukup"
 LABEL contact="soukup.sam(at)gmail.com"
 

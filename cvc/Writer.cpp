@@ -22,8 +22,8 @@ Writer::~Writer()
 const string Writer::VCFHeader = "##fileformat=VCFv4.3\n"
 			"##INFO=<ID=ADFP,Number=1,Type=Integer,Description=\"Depth of variant-supporting bases on forward strand (reads2plus), pair spans this position\">\n"
 			"##INFO=<ID=ADFU,Number=1,Type=Integer,Description=\"Depth of variant-supporting bases on forward strand (reads2plus), pair does NOT span this position\">\n"
-			"##INFO=<ID=ADR,Number=1,Type=Integer,Description=\"Depth of variant-supporting bases on forward strand (reads2minus), pair spans this position\">\n"
-			"##INFO=<ID=ADR,Number=1,Type=Integer,Description=\"Depth of variant-supporting bases on forward strand (reads2minus), pair does NOT span this position\">\n"
+			"##INFO=<ID=ADRP,Number=1,Type=Integer,Description=\"Depth of variant-supporting bases on forward strand (reads2minus), pair spans this position\">\n"
+			"##INFO=<ID=ADRU,Number=1,Type=Integer,Description=\"Depth of variant-supporting bases on forward strand (reads2minus), pair does NOT span this position\">\n"
 			"##INFO=<ID=ADP,Number=1,Type=Integer,Description=\"Depth of variant-supporting bases on pair reads\">\n"
 			"##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total depth\">\n"
 			"#CHROM POS      ID         REF   ALT    QUAL  FILTER   INFO\n";

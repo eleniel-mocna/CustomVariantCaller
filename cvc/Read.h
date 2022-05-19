@@ -59,6 +59,8 @@ private:
 	void setCigarLength();
 	void setCigarType();
 	size_t remainingThisCigar;
+	bool mapQPass=false;
+	size_t referenceIndexFromBegin(unsigned int referenceIndex);
 
 public:
 	~Read();
@@ -69,7 +71,10 @@ public:
 	size_t nextCigar();
 	string toString();
 	cigarState cigarType;
-	bool spansPosition(unsigned int index);
+	static size_t char2Fred(char);
+	size_t baseQAtIndex(size_t indexFromBegin);
+	void passesMapQ();
+	bool spansPosition(unsigned int index, size_t minBaseQ);
 	/// Query template NAME
 	///
 	string qname;

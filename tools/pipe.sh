@@ -1,7 +1,4 @@
 #!/bin/bash
-set -euo pipefail # This is here so we don't fail on "folder exists error"
-set -- "${POSITIONAL[@]}" # restore positional parameters
-
 log () 
 {
     log_string="[CVC $(date +%H:%M.%S)] $1"
@@ -31,7 +28,7 @@ while [[ $# -gt 0 ]]; do
             echo 'USAGE: ./VariantCaller.sh [options] reads1.fastq reads2.fastq.'
             echo 
             echo "Options:"
-            echo "  -h,--help			  display this information"
+            echo "  -h,--help                     display this information"
             echo "  -f,--fasta-ref FILE   faidx indexed reference sequence file [\"/reference/ucsc.hg19.fasta\"]"
             echo "  -q,--mapq             skip alignments with mapQ smaller than INT [0]"
             echo "  -Q,--baseq            skip bases with baseQ/BAQ smaller than INT [13]"
@@ -94,6 +91,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 mkdir "$name"
+
+set -euo pipefail # This is here so we don't fail on "folder exists error"
+set -- "${POSITIONAL[@]}" # restore positional parameters
 
 bam_file="$name/$name.bam"
 log_file="$name/$name.log"

@@ -40,8 +40,6 @@ private:
 
 	ReadVariant *analyzeRead(Read *read);
 
-	static size_t char2Fred(char);
-
 	void solveM(Read *read);
 
 	void solveI(Read *read);

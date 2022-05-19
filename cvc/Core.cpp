@@ -237,7 +237,7 @@ bool Core::mapQFilter(Read *read)
  */
 bool Core::baseQFilter(Read *read)
 {
-	return (char2Fred(read->qual[readIndex]) >= reference->minQual);	
+	return (Read::char2Fred(read->qual[readIndex]) >= reference->minQual);	
 }
 
 /**
@@ -247,7 +247,7 @@ bool Core::baseQFilter(Read *read)
  * This method is the bulk of analysis.
  * It goes through every base and its corresponding CIGAR string, and creates 
  * linked list of variants that get returned.
- * It doesn't have to deal with any garbage collection,
+ * It doesn't have to deal with any memory deallocation,
  * because it gives pointer to the linked list to the Read, which disposes
  * of it when it is destructed.
  * 
@@ -400,16 +400,7 @@ void Core::reportSingleReadVariant(Read *read, ReadVariant *variant, bool paired
 	}
 }
 
-/**
- * @brief Converts base quality from char to size_t
- * 
- * @param char to be evaluated
- * @return size_t 
- */
-size_t Core::char2Fred(char inp)
-{
-	return int(inp) - 33;
-}
+
 
 /**
  * @brief Analyze a pair of reads and report their variants, this is THE method to call.
@@ -462,26 +453,26 @@ void Core::analyzeReads(Read *first)
 		{
 			oldFirstVariant = firstVariant;
 			firstVariant = firstVariant->next;
-			reportFirstReadVariant(first, oldFirstVariant, second->spansPosition(oldFirstVariant->index));
+			reportFirstReadVariant(first, oldFirstVariant, second->spansPosition(oldFirstVariant->index, reference->minMapQ));
 		}
 		else
 		{
 			oldSecondVariant = secondVariant;
 			secondVariant = secondVariant->next;
-			reportSecondReadVariant(second, oldSecondVariant, first->spansPosition(oldSecondVariant->index));
+			reportSecondReadVariant(second, oldSecondVariant, first->spansPosition(oldSecondVariant->index, reference->minMapQ));
 		}
 	}
 	bool spanned;
 	while (firstVariant != nullptr)
 	{
-		spanned = second!=nullptr && second->spansPosition(oldFirstVariant->index);
+		spanned = second!=nullptr && second->spansPosition(oldFirstVariant->index, reference->minMapQ);
 		oldFirstVariant = firstVariant;
 		firstVariant = firstVariant->next;
 		reportFirstReadVariant(first, oldFirstVariant, spanned);
 	}
 	while (secondVariant != nullptr)
 	{
-		spanned = first!=nullptr && first->spansPosition(oldSecondVariant->index);
+		spanned = first!=nullptr && first->spansPosition(oldSecondVariant->index, reference->minMapQ);
 		oldSecondVariant = secondVariant;
 		secondVariant = secondVariant->next;
 		reportSecondReadVariant(second, oldSecondVariant, spanned);
